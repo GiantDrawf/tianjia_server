@@ -11,24 +11,89 @@ module.exports = (app) => {
   // 管理员权限
   const admin = role.can('admin');
 
+  /**
+   * 后台接口
+   */
+
   // 登录接口
-  router.post('/api/user/login', controller.user.login);
+  router.post('/platform_api/user/login', controller.user.login);
 
   // 获取用户角色
-  router.get('/api/user/getRole', jwt, controller.user.getRole);
+  router.get('/platform_api/user/getRole', jwt, controller.user.getRole);
 
   // 新增用户
-  router.post('/api/user/add', jwt, admin, controller.user.addUser);
+  router.post('/platform_api/user/add', jwt, admin, controller.user.addUser);
 
   // 删除用户
-  router.post('/api/user/delete', jwt, admin, controller.user.delete);
+  router.post('/platform_api/user/delete', jwt, admin, controller.user.delete);
 
-  // 更改用户
-  router.post('/api/user/update', jwt, admin, controller.user.update);
+  /**
+   * 更改用户
+   * @role admin
+   */
+  router.post('/platform_api/user/update', jwt, admin, controller.user.update);
 
-  // 查询用户列表
-  router.post('/api/user/query', jwt, admin, controller.user.query);
+  /**
+   * 查询用户列表
+   * @role admin
+   */
+  router.post('/platform_api/user/query', jwt, admin, controller.user.query);
 
-  // 用户名查重
-  router.get('/api/user/checkname', jwt, admin, controller.user.checkname);
+  /**
+   * 用户名查重
+   * @role admin
+   */
+  router.get(
+    '/platform_api/user/checkname',
+    jwt,
+    admin,
+    controller.user.checkname
+  );
+
+  /**
+   * H5端接口
+   */
+
+  /**
+   * 新增消息
+   * @role anyone
+   */
+  router.post('/h5_api/msg/create', controller.message.createMsg);
+
+  /**
+   * 删除消息
+   * @role admin
+   */
+  router.post(
+    '/platform_api/msg/delete',
+    jwt,
+    admin,
+    controller.message.delete
+  );
+
+  /**
+   * 查询消息列表
+   * @role anyone
+   */
+  router.post('/api/msg/query', controller.message.query);
+
+  /**
+   * 获取所有未读消息
+   * @role anyone
+   */
+  router.get(
+    '/platform_api/msg/getNoReadMsg',
+    controller.message.getAllNoReadMsg
+  );
+
+  /**
+   * 回复消息
+   * @role admin
+   */
+  router.post(
+    '/platform_api/msg/replayMsg',
+    jwt,
+    admin,
+    controller.message.replayMsg
+  );
 };
