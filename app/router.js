@@ -16,35 +16,35 @@ module.exports = (app) => {
    */
 
   // 登录接口
-  router.post('/platform_api/user/login', controller.user.login);
+  router.post('/api/platform/user/login', controller.user.login);
 
   // 获取用户角色
-  router.get('/platform_api/user/getRole', jwt, controller.user.getRole);
+  router.get('/api/platform/user/getRole', jwt, controller.user.getRole);
 
   // 新增用户
-  router.post('/platform_api/user/add', jwt, admin, controller.user.addUser);
+  router.post('/api/platform/user/add', jwt, admin, controller.user.addUser);
 
   // 删除用户
-  router.post('/platform_api/user/delete', jwt, admin, controller.user.delete);
+  router.post('/api/platform/user/delete', jwt, admin, controller.user.delete);
 
   /**
    * 更改用户
    * @role admin
    */
-  router.post('/platform_api/user/update', jwt, admin, controller.user.update);
+  router.post('/api/platform/user/update', jwt, admin, controller.user.update);
 
   /**
    * 查询用户列表
    * @role admin
    */
-  router.post('/platform_api/user/query', jwt, admin, controller.user.query);
+  router.post('/api/platform/user/query', jwt, admin, controller.user.query);
 
   /**
    * 用户名查重
    * @role admin
    */
   router.get(
-    '/platform_api/user/checkname',
+    '/api/platform/user/checkname',
     jwt,
     admin,
     controller.user.checkname
@@ -58,14 +58,14 @@ module.exports = (app) => {
    * 新增消息
    * @role anyone
    */
-  router.post('/h5_api/msg/create', controller.message.createMsg);
+  router.post('/api/h5/msg/create', controller.message.createMsg);
 
   /**
    * 删除消息
    * @role admin
    */
   router.post(
-    '/platform_api/msg/delete',
+    '/api/platform/msg/delete',
     jwt,
     admin,
     controller.message.delete
@@ -75,14 +75,14 @@ module.exports = (app) => {
    * 查询消息列表
    * @role anyone
    */
-  router.post('/api/msg/query', controller.message.query);
+  router.post('/api/common/msg/query', controller.message.query);
 
   /**
    * 获取所有未读消息
    * @role anyone
    */
   router.get(
-    '/platform_api/msg/getNoReadMsg',
+    '/api/platform/msg/getNoReadMsg',
     controller.message.getAllNoReadMsg
   );
 
@@ -91,7 +91,7 @@ module.exports = (app) => {
    * @role admin
    */
   router.post(
-    '/platform_api/msg/replayMsg',
+    '/api/platform/msg/replayMsg',
     jwt,
     admin,
     controller.message.replayMsg
