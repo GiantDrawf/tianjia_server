@@ -96,4 +96,24 @@ module.exports = (app) => {
     admin,
     controller.message.replayMsg
   );
+
+  /**
+   * 变更消息是否在官网显示
+   */
+  router.post(
+    '/api/platform/msg/changeMsgShow',
+    jwt,
+    admin,
+    controller.message.changeMsgShow
+  );
+
+  /**
+   * 消息已读状态
+   */
+  router.get(
+    '/api/platform/msg/readMsg',
+    jwt,
+    admin,
+    controller.message.changeMsgRead
+  );
 };

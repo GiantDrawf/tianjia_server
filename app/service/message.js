@@ -11,6 +11,7 @@ class MessageService extends Service {
       {
         msgId: uuidv4(),
         isRead: false,
+        isShow: true,
         createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
       },
       msg
@@ -35,6 +36,7 @@ class MessageService extends Service {
       'msgId',
       'msgFrom',
       'isRead',
+      'isShow',
       'title',
       'content',
       'name',
@@ -110,6 +112,37 @@ class MessageService extends Service {
     const $set = {
       replay,
       replayTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+      isRead: true,
+    };
+    const options = { upsert: false };
+    const updateRes = await this.ctx.model.Message.updateOne(
+      condition,
+      { $set },
+      options
+    );
+
+    return updateRes;
+  }
+
+  async changeMsgShow({ msgId, isShow }) {
+    const condition = { msgId };
+    const $set = {
+      isShow,
+      isRead: true,
+    };
+    const options = { upsert: false };
+    const updateRes = await this.ctx.model.Message.updateOne(
+      condition,
+      { $set },
+      options
+    );
+
+    return updateRes;
+  }
+
+  async msgReaded(msgId) {
+    const condition = { msgId };
+    const $set = {
       isRead: true,
     };
     const options = { upsert: false };

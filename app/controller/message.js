@@ -69,6 +69,36 @@ class MessageController extends BaseController {
       });
     }
   }
+
+  async changeMsgShow() {
+    const {
+      service: { message },
+      request: { body },
+    } = this.ctx;
+    const updateRes = await message.changeMsgShow(body);
+
+    if (updateRes && updateRes.ok) {
+      this.success();
+    } else {
+      this.error();
+    }
+  }
+
+  async changeMsgRead() {
+    const {
+      service: { message },
+      request: {
+        query: { msgId },
+      },
+    } = this.ctx;
+    const updateRes = await message.msgReaded(msgId);
+
+    if (updateRes && updateRes.ok) {
+      this.success();
+    } else {
+      this.error();
+    }
+  }
 }
 
 module.exports = MessageController;

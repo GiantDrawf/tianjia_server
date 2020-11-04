@@ -12,6 +12,8 @@ module.exports = function (app) {
       msgFrom: String,
       // 是否已读
       isRead: { type: Boolean, default: false },
+      // 是否展示
+      isShow: { type: Boolean, default: true },
       // 消息标题
       title: String,
       // 消息内容
