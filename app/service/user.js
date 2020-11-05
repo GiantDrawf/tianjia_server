@@ -78,7 +78,7 @@ class UserService extends Service {
     const searchRules = {};
     searchParams
       .map((currentParam) => {
-        if (query[currentParam]) {
+        if (query.hasOwnProperty(currentParam)) {
           return {
             key: currentParam,
             value: query[currentParam],
