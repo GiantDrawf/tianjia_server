@@ -14,3 +14,4 @@ typings/
 .nyc_output/
 config/config.prod.js
 config/config.local.js
+.github/
