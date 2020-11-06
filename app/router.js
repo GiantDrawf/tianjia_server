@@ -116,4 +116,6 @@ module.exports = (app) => {
     admin,
     controller.message.changeMsgRead
   );
+
+  router.post('/api/platform/upload', jwt, admin, controller.file.upload);
 };

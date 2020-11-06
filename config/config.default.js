@@ -66,6 +66,12 @@ module.exports = (appInfo) => {
     disableConsoleAfterReady: false,
   };
 
+  config.multipart = {
+    fileSize: '10mb',
+    mode: 'stream',
+    fileModeMatch: /^\/upload$/,
+  };
+
   // add your user config here
   const userConfig = {
     // myAppName: 'egg',
