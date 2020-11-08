@@ -104,5 +104,8 @@ module.exports = (app) => {
     controller.message.changeMsgRead
   );
 
+  /**
+   * 上传文件接口
+   */
   router.post('/platform/upload', jwt, admin, controller.file.upload);
 };

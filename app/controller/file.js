@@ -21,11 +21,9 @@ class FileController extends BaseController {
     function mkdirsSync(dirname) {
       if (fs.existsSync(dirname)) {
         return true;
-      } else {
-        if (mkdirsSync(path.dirname(dirname))) {
-          fs.mkdirSync(dirname);
-          return true;
-        }
+      } else if (mkdirsSync(path.dirname(dirname))) {
+        fs.mkdirSync(dirname);
+        return true;
       }
     }
     mkdirsSync(path.join(uploadBasePath, dirname));
@@ -34,10 +32,10 @@ class FileController extends BaseController {
     // 写入流
     const writeStream = fs.createWriteStream(target);
     try {
-      //异步把文件流 写入
+      // 异步把文件流 写入
       await awaitWriteStream(stream.pipe(writeStream));
     } catch (err) {
-      //如果出现错误，关闭管道
+      // 如果出现错误，关闭管道
       await sendToWormhole(stream);
       this.error({ data: err });
     }
