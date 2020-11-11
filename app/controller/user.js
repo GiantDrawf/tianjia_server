@@ -6,10 +6,25 @@ class UserController extends BaseController {
   constructor(ctx) {
     super(ctx);
 
-    // 检测登录参数
+    // 校验登录参数
     this.loginParamsValidate = {
-      name: { type: 'string', required: true, message: '请输入用户名' },
-      password: { type: 'string', required: true, message: '请输入密码' },
+      name: [
+        { required: true, message: '请输入用户名' },
+        { type: 'string', message: '用户名格式错误' },
+      ],
+      password: [
+        { required: true, message: '请输入密码' },
+        { type: 'string', message: '密码格式错误' },
+      ],
+    };
+
+    // 校验新增参数
+    this.addUserParamsValidate = {
+      ...this.loginParamsValidate,
+      role: [
+        { required: true, message: '请选择角色' },
+        { type: 'string', message: '角色字段类型错误' },
+      ],
     };
   }
   async login() {
@@ -17,7 +32,11 @@ class UserController extends BaseController {
     const { name, password } = ctx.request.body;
 
     // check params
-    ctx.validate(this.loginParamsValidate);
+    const validateResult = await ctx.validate(
+      this.loginParamsValidate,
+      ctx.request.body
+    );
+    if (!validateResult) return;
 
     const loginUser = await this.ctx.service.user.login(name, password);
 
@@ -31,6 +50,13 @@ class UserController extends BaseController {
 
   async addUser() {
     const { name, password, role } = await this.ctx.request.body;
+
+    // check params
+    const validateResult = await this.ctx.validate(
+      this.addUserParamsValidate,
+      this.ctx.request.body
+    );
+    if (!validateResult) return;
 
     const addUserRes = await this.ctx.service.user.addUser({
       name,

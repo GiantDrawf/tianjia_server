@@ -14,9 +14,9 @@ module.exports = {
     enable: true,
     package: 'egg-cors',
   },
-  validate: {
+  validatePlus: {
     enable: true,
-    package: 'egg-validate',
+    package: 'egg-validate-plus',
   },
   userrole: {
     enable: true,

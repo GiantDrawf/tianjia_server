@@ -108,4 +108,39 @@ module.exports = (app) => {
    * 上传文件接口
    */
   router.post('/platform/upload', jwt, admin, controller.file.upload);
+
+  /**
+   * 新建文章
+   */
+  router.post(
+    '/platform/article/create',
+    jwt,
+    admin,
+    controller.article.create
+  );
+
+  /**
+   * 删除文章
+   */
+  router.get('/platform/article/delete', jwt, admin, controller.article.delete);
+
+  /**
+   * 更改文章
+   */
+  router.post(
+    '/platform/article/update',
+    jwt,
+    admin,
+    controller.article.update
+  );
+
+  /**
+   * 分页查询
+   */
+  router.post('/platform/article/query', jwt, admin, controller.article.query);
+
+  /**
+   * 获取单篇详情
+   */
+  router.get('/common/article/getDetail', controller.article.getDetail);
 };

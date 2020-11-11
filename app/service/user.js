@@ -1,14 +1,14 @@
 'use strict';
 
 const Service = require('egg').Service;
-const crypto = require('crypto');
+const { MD5 } = require('../public/utils');
 
 /**
  * User Service
  */
 class UserService extends Service {
   async login(name, password) {
-    const pwdMD5 = crypto.createHash('md5').update(password).digest('hex');
+    const pwdMD5 = MD5(password);
     const findUserRes = await this.ctx.model.User.find({
       name,
       password: pwdMD5,
@@ -26,7 +26,7 @@ class UserService extends Service {
         msg: '用户名已存在',
       };
     }
-    const pwdMD5 = crypto.createHash('md5').update(password).digest('hex');
+    const pwdMD5 = MD5(password);
     const addUser = await this.ctx.model.User.create({
       name,
       password: pwdMD5,
@@ -56,7 +56,7 @@ class UserService extends Service {
     const condition = { name };
     const $set = {};
     if (password) {
-      $set.password = crypto.createHash('md5').update(password).digest('hex');
+      $set.password = MD5(password);
     }
     if (role) {
       $set.role = role;

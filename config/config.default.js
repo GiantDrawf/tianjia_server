@@ -72,6 +72,21 @@ module.exports = (appInfo) => {
     fileModeMatch: /^\/upload$/,
   };
 
+  // 参数校验
+  config.validatePlus = {
+    resolveError(ctx, errors) {
+      if (errors.length) {
+        ctx.type = 'json';
+        ctx.status = 400;
+        ctx.body = {
+          code: 422,
+          error: errors,
+          msg: '参数错误',
+        };
+      }
+    },
+  };
+
   // add your user config here
   const userConfig = {
     // myAppName: 'egg',
