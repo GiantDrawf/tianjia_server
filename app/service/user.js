@@ -1,12 +1,12 @@
 'use strict';
 
-const Service = require('egg').Service;
+const BaseService = require('./BaseService');
 const { MD5 } = require('../public/utils');
 
 /**
  * User Service
  */
-class UserService extends Service {
+class UserService extends BaseService {
   async login(name, password) {
     const pwdMD5 = MD5(password);
     const findUserRes = await this.ctx.model.User.find({
@@ -72,47 +72,15 @@ class UserService extends Service {
   }
 
   async query(params) {
-    const { query = {}, pagination } = params;
-    // 过滤空值
-    const searchParams = ['name', 'role'];
-    const searchRules = {};
-    searchParams
-      .map((currentParam) => {
-        if (query.hasOwnProperty(currentParam)) {
-          return {
-            key: currentParam,
-            value: query[currentParam],
-          };
-        }
-        return null;
-      })
-      .forEach((data) => {
-        if (data) {
-          // 用户名支持模糊搜索
-          if (data.key === 'name') {
-            searchRules[data.key] = new RegExp(data.value);
-          } else {
-            searchRules[data.key] = data.value;
-          }
-        }
-      });
-
-    const res = await this.ctx.model.User.paginate(searchRules, {
-      page: pagination.page,
-      limit: pagination.pageSize,
-      select: '-_id name role',
+    const res = await this.commonQuery({
+      params,
+      options: {
+        model: this.ctx.model.User,
+        searchParams: ['name', 'role'],
+        fuzzySearchParams: ['name'], // 支持模糊搜索的字段名
+        select: '-_id name role',
+      },
     });
-
-    if (res) {
-      return {
-        list: res.docs || [],
-        pagination: {
-          current: res.page || 1,
-          pageSize: res.limit || 10,
-          total: res.totalDocs || 0,
-        },
-      };
-    }
 
     return res;
   }

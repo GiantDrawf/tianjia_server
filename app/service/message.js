@@ -1,11 +1,10 @@
 'use strict';
 
-const Service = require('egg').Service;
+const BaseService = require('./BaseService');
 const { v4: uuidv4 } = require('uuid');
 const moment = require('moment');
-const _ = require('lodash');
 
-class MessageService extends Service {
+class MessageService extends BaseService {
   async createMsg(msg) {
     const msgMapWithId = Object.assign(
       {
@@ -30,71 +29,26 @@ class MessageService extends Service {
   }
 
   async query(params = {}) {
-    const { query = {}, pagination = { page: 1, pageSize: 10 } } = params;
-    // 过滤空值
-    const searchParams = [
-      'msgId',
-      'msgFrom',
-      'isRead',
-      'isShow',
-      'title',
-      'content',
-      'name',
-      'contact',
-      'createTime',
-      'replayTime',
-    ];
-    const searchRules = {};
-    searchParams
-      .map((currentParam) => {
-        if (query.hasOwnProperty(currentParam)) {
-          return {
-            key: currentParam,
-            value: query[currentParam],
-          };
-        }
-        return null;
-      })
-      .forEach((data) => {
-        if (data) {
-          // 支持模糊搜索字段
-          if (
-            data.key === 'name' ||
-            data.key === 'title' ||
-            data.key === 'content' ||
-            data.key === 'contact'
-          ) {
-            searchRules[data.key] = new RegExp(data.value);
-          } else if (
-            (data.key === 'createTime' && _.isArray(data.value)) ||
-            (data.key === 'replayTime' && _.isArray(data.value))
-          ) {
-            // 时间支持范围搜索
-            searchRules[data.key] = {
-              $gte: data.value[0],
-              $lte: data.value[1],
-            };
-          } else {
-            searchRules[data.key] = data.value;
-          }
-        }
-      });
-
-    const res = await this.ctx.model.Message.paginate(searchRules, {
-      page: pagination.page,
-      limit: pagination.pageSize,
+    const res = await this.commonQuery({
+      params,
+      options: {
+        model: this.ctx.model.Message,
+        searchParams: [
+          'msgId',
+          'msgFrom',
+          'isRead',
+          'isShow',
+          'title',
+          'content',
+          'name',
+          'contact',
+          'createTime',
+          'replayTime',
+        ],
+        fuzzySearchParams: ['title', 'content', 'name', 'contact'], // 支持模糊搜索的字段名
+        timeRangeParams: ['createTime', 'replayTime'],
+      },
     });
-
-    if (res) {
-      return {
-        list: res.docs || [],
-        pagination: {
-          current: res.page || 1,
-          pageSize: res.limit || 10,
-          total: res.totalDocs || 0,
-        },
-      };
-    }
 
     return res;
   }

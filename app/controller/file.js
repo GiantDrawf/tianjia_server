@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const awaitWriteStream = require('await-stream-ready').write;
 const sendToWormhole = require('stream-wormhole');
-const dayjs = require('dayjs');
+const moment = require('moment');
 
 class FileController extends BaseController {
   async upload() {
@@ -17,7 +17,7 @@ class FileController extends BaseController {
       Math.random() * 1000
     )}${path.extname(stream.filename).toLocaleLowerCase()}`;
     // 根据日期生成文件夹
-    const dirname = dayjs(Date.now()).format('YYYY/MM/DD');
+    const dirname = moment().format('YYYY/MM/DD');
     function mkdirsSync(dirname) {
       if (fs.existsSync(dirname)) {
         return true;
