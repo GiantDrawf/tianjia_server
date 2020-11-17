@@ -110,6 +110,16 @@ module.exports = (app) => {
   router.post('/platform/upload', jwt, admin, controller.file.upload);
 
   /**
+   * 本地化图片接口
+   */
+  router.post(
+    '/platform/localizeImgs',
+    jwt,
+    admin,
+    controller.file.localizeImgs
+  );
+
+  /**
    * 新建文章
    */
   router.post(
