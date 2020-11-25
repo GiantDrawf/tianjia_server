@@ -17,7 +17,7 @@ class UserService extends BaseService {
     return findUserRes;
   }
 
-  async addUser({ name, password, role }) {
+  async addUser({ name, name_zh = '', password, role }) {
     const checkUser = await this.ctx.model.User.find({ name });
 
     if (checkUser && checkUser.length) {
@@ -29,6 +29,7 @@ class UserService extends BaseService {
     const pwdMD5 = MD5(password);
     const addUser = await this.ctx.model.User.create({
       name,
+      name_zh,
       password: pwdMD5,
       role,
     });
@@ -39,6 +40,7 @@ class UserService extends BaseService {
         msg: '新增用户成功',
         data: {
           name: addUser.name,
+          name_zh: addUser.name_zh,
           role: addUser.role,
         },
       };
@@ -52,7 +54,7 @@ class UserService extends BaseService {
     return deleteUser;
   }
 
-  async update({ name, password, role }) {
+  async update({ name, name_zh, password, role }) {
     const condition = { name };
     const $set = {};
     if (password) {
@@ -60,6 +62,9 @@ class UserService extends BaseService {
     }
     if (role) {
       $set.role = role;
+    }
+    if (name_zh) {
+      $set.name_zh = name_zh;
     }
     const options = { upsert: false };
     const updateRes = await this.ctx.model.User.updateOne(
@@ -76,9 +81,9 @@ class UserService extends BaseService {
       params,
       options: {
         model: this.ctx.model.User,
-        searchParams: ['name', 'role'],
-        fuzzySearchParams: ['name'], // 支持模糊搜索的字段名
-        select: '-_id name role',
+        searchParams: ['name', 'name_zh', 'role'],
+        fuzzySearchParams: ['name', 'name_zh'], // 支持模糊搜索的字段名
+        select: '-_id name name_zh role',
       },
     });
 

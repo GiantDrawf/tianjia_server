@@ -15,8 +15,16 @@ module.exports = function (app) {
       moduleName: { type: String },
       // 模块介绍
       moduleDesc: { type: String },
-      // 模块类型
-      moduleType: { type: String },
+      // 模块内容
+      moduleContent: { type: Array },
+      // 创建人
+      creator: { type: String },
+      // 创建时间
+      createTime: { type: String },
+      // 更新人
+      updater: { type: String },
+      // 更新时间
+      updateTime: { type: String },
     },
     { versionKey: false }
   );

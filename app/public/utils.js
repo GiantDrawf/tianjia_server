@@ -21,28 +21,28 @@ const getFileExt = (filePath, fileType) => {
   if (!fileExt) {
     switch (fileType) {
       case 'image/png':
-        fileExt = 'png';
+        fileExt = '.png';
         break;
       case 'image/bmp':
-        fileExt = 'bmp';
+        fileExt = '.bmp';
         break;
       case 'image/jpeg':
-        fileExt = 'jpg';
+        fileExt = '.jpg';
         break;
       case 'image/gif':
-        fileExt = 'gif';
+        fileExt = '.gif';
         break;
       case 'image/vnd.microsoft.icon':
-        fileExt = 'ico';
+        fileExt = '.ico';
         break;
       case 'image/svg+xml':
-        fileExt = 'svg';
+        fileExt = '.svg';
         break;
       case 'image/tiff':
-        fileExt = 'tif';
+        fileExt = '.tif';
         break;
       case 'image/webp':
-        fileExt = 'webp';
+        fileExt = '.webp';
         break;
       default:
         break;
@@ -52,4 +52,11 @@ const getFileExt = (filePath, fileType) => {
   return fileExt;
 };
 
-module.exports = { MD5, getFileExt };
+/**
+ * 获取随机字符串
+ */
+const getRandomWorld = () => {
+  return Math.random().toString(36).substr(2);
+};
+
+module.exports = { MD5, getFileExt, getRandomWorld };

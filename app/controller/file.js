@@ -100,7 +100,7 @@ class FileController extends BaseController {
               const target = path.join(
                 uploadBasePath,
                 dirname,
-                `${filename}.${fileExt}`
+                `${filename}${fileExt}`
               );
               // 写入流
               const writeStream = fs.createWriteStream(target);
@@ -119,7 +119,7 @@ class FileController extends BaseController {
             })
             .on('close', () => {
               resolve({
-                [`${itemImage}`]: `${this.app.config.resoursePath}/${dirname}/${filename}.${fileExt}`,
+                [`${itemImage}`]: `${this.app.config.resoursePath}/${dirname}/${filename}${fileExt}`,
               });
             });
         })

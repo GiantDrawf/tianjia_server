@@ -10,6 +10,9 @@ module.exports = function (app) {
         unique: true,
         type: String,
       },
+      name_zh: {
+        type: String,
+      },
       password: {
         type: String,
       },

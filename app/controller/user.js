@@ -49,7 +49,7 @@ class UserController extends BaseController {
   }
 
   async addUser() {
-    const { name, password, role } = await this.ctx.request.body;
+    const { name, name_zh, password, role } = await this.ctx.request.body;
 
     // check params
     const validateResult = await this.ctx.validate(
@@ -60,6 +60,7 @@ class UserController extends BaseController {
 
     const addUserRes = await this.ctx.service.user.addUser({
       name,
+      name_zh,
       password,
       role,
     });
@@ -120,6 +121,7 @@ class UserController extends BaseController {
       this.success({
         data: {
           name: result[0].name,
+          name_zh: result[0].name_zh,
           role: result[0].role,
         },
       });

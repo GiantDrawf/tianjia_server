@@ -22,6 +22,7 @@ module.exports = {
       id: user._id,
       token,
       name: user.name,
+      name_zh: user.name_zh,
       role: user.role,
     };
   },
