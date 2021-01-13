@@ -97,6 +97,13 @@ class ArticleController extends BaseController {
 
     this.success({ data: list });
   }
+
+  async batchQuery() {
+    const aids = this.ctx.request.body;
+    const articles = await this.ctx.service.article.batchQuery(aids);
+
+    this.success({ data: articles });
+  }
 }
 
 module.exports = ArticleController;

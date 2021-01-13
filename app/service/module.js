@@ -1,3 +1,11 @@
+/*
+ * @Author: zhujian1995@outlook.com
+ * @Date: 2020-11-18 16:46:08
+ * @LastEditTime: 2021-01-13 16:40:07
+ * @LastEditors: zhujian
+ * @Description: 模块serives
+ * @FilePath: /tianjia_server/app/service/module.js
+ */
 'use strict';
 
 const BaseService = require('./BaseService');
@@ -58,6 +66,38 @@ class ModuleService extends BaseService {
     });
 
     return res;
+  }
+
+  async queryDetail(mid) {
+    const moduleDetail = await this.ctx.model.Module.aggregate([
+      { $match: { mid } },
+      {
+        $lookup: {
+          from: 'article',
+          localField: 'moduleContent',
+          foreignField: 'aid',
+          as: 'moduleContent',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          mid: 1,
+          moduleName: 1,
+          moduleDesc: 1,
+          'moduleContent.aid': 1,
+          'moduleContent.title': 1,
+          'moduleContent.summary': 1,
+          'moduleContent.type': 1,
+        },
+      },
+    ]);
+
+    return (moduleDetail && moduleDetail[0]) || {};
+  }
+
+  async queryModuleByModuleName(moduleName) {
+    return await await this.ctx.model.Module.findOne({ moduleName });
   }
 }
 

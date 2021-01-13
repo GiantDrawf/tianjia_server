@@ -153,4 +153,44 @@ module.exports = (app) => {
    * 获取单篇详情
    */
   router.get('/common/article/getDetail', controller.article.getDetail);
+
+  /**
+   * 批量查询文章
+   */
+  router.post(
+    '/platform/article/batchQuery',
+    jwt,
+    admin,
+    controller.article.batchQuery
+  );
+
+  /**
+   * 新建模块
+   */
+  router.post('/platform/module/create', jwt, admin, controller.module.create);
+
+  /**
+   * 删除模块
+   */
+  router.get('/platform/module/delete', jwt, admin, controller.module.delete);
+
+  /**
+   * 更改模块信息
+   */
+  router.post('/platform/module/update', jwt, admin, controller.module.update);
+
+  /**
+   * 分页查询
+   */
+  router.post('/platform/module/query', jwt, admin, controller.module.query);
+
+  /**
+   * 获取单个模块详情
+   */
+  router.get(
+    '/platform/module/getDetail',
+    jwt,
+    admin,
+    controller.module.getDetail
+  );
 };

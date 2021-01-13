@@ -1,3 +1,10 @@
+/*
+ * @Author: zhujian1995@outlook.com
+ * @Date: 2020-11-10 17:39:29
+ * @LastEditors: zhujian
+ * @LastEditTime: 2021-01-12 09:25:51
+ * @Description: 你 kin 你擦
+ */
 'use strict';
 
 const BaseService = require('./BaseService');
@@ -5,7 +12,6 @@ const moment = require('moment');
 
 class ArticleService extends BaseService {
   async createArticle(article) {
-    console.log(article);
     const createRes = await this.ctx.model.Article.create(article);
 
     return createRes;
@@ -75,6 +81,20 @@ class ArticleService extends BaseService {
         timeRangeParams: ['createTime', 'updateTime'],
         select: '-_id',
       },
+    });
+
+    return res;
+  }
+
+  async batchQuery(aids = []) {
+    const res = await this.ctx.model.Article.find({
+      aid: { $in: aids },
+    }).select({
+      _id: false,
+      creator: false,
+      createTime: false,
+      updater: false,
+      updateTime: false,
     });
 
     return res;

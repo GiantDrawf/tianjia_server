@@ -1,3 +1,7 @@
+/*
+ * @Author: zhujian1995@outlook.com
+ * @LastEditors: zhujian
+ */
 'use strict';
 
 module.exports = function (app) {
@@ -38,5 +42,7 @@ module.exports = function (app) {
     { versionKey: false }
   );
 
-  return mongoose.model('article', ArticleSchema);
+  ArticleSchema.index({ aid: 1 }, { unique: true });
+
+  return mongoose.model('Article', ArticleSchema, 'article');
 };

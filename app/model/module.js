@@ -1,3 +1,10 @@
+/*
+ * @Author: zhujian1995@outlook.com
+ * @Date: 2020-11-16 10:22:25
+ * @LastEditors: zhujian
+ * @LastEditTime: 2021-01-11 18:58:22
+ * @Description: 你 kin 你擦
+ */
 'use strict';
 
 module.exports = function (app) {
@@ -16,7 +23,7 @@ module.exports = function (app) {
       // 模块介绍
       moduleDesc: { type: String },
       // 模块内容
-      moduleContent: { type: Array },
+      moduleContent: [{ type: String, ref: 'article' }],
       // 创建人
       creator: { type: String },
       // 创建时间
@@ -29,5 +36,7 @@ module.exports = function (app) {
     { versionKey: false }
   );
 
-  return mongoose.model('module', ModuleSchema);
+  ModuleSchema.index({ mid: 1 }, { unique: true });
+
+  return mongoose.model('Module', ModuleSchema, 'module');
 };
