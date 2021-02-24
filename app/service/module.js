@@ -1,7 +1,7 @@
 /*
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-18 16:46:08
- * @LastEditTime: 2021-01-13 16:40:07
+ * @LastEditTime: 2021-02-25 00:01:23
  * @LastEditors: zhujian
  * @Description: 模块serives
  * @FilePath: /tianjia_server/app/service/module.js
@@ -76,9 +76,30 @@ class ModuleService extends BaseService {
           from: 'article',
           localField: 'moduleContent',
           foreignField: 'aid',
-          as: 'moduleContent',
+          as: 'result',
         },
       },
+      // 对联查进行排序
+      { $unwind: '$result' },
+      {
+        $addFields: {
+          sort: {
+            $indexOfArray: ['$moduleContent', '$result.aid'],
+          },
+        },
+      },
+      { $sort: { _id: 1, sort: 1 } },
+      // 组装数据
+      {
+        $group: {
+          _id: '$mid',
+          mid: { $first: '$mid' },
+          moduleName: { $first: '$moduleName' },
+          moduleDesc: { $first: '$moduleDesc' },
+          moduleContent: { $push: '$result' },
+        },
+      },
+      // 限制返回字段
       {
         $project: {
           _id: 0,
@@ -89,6 +110,8 @@ class ModuleService extends BaseService {
           'moduleContent.title': 1,
           'moduleContent.summary': 1,
           'moduleContent.type': 1,
+          'moduleContent.thumbnail': 1,
+          'moduleContent.createTime': 1,
         },
       },
     ]);
