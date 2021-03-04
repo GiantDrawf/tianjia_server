@@ -193,4 +193,11 @@ module.exports = (app) => {
     admin,
     controller.module.getDetail
   );
+
+  /**
+   * 新增登记
+   */
+  router.post('/temporary/checkin/add', controller.checkIn.createCheckIn);
+
+  router.post('/platform/checkin/query', controller.checkIn.query);
 };
