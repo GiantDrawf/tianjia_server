@@ -199,5 +199,23 @@ module.exports = (app) => {
    */
   router.post('/temporary/checkin/add', controller.checkIn.createCheckIn);
 
-  router.post('/platform/checkin/query', controller.checkIn.query);
+  /**
+   * 查询登记
+   */
+  router.post('/platform/checkin/query', jwt, admin, controller.checkIn.query);
+
+  /**
+   * 删除登记
+   */
+  router.get('/platform/checkin/delete', jwt, admin, controller.checkIn.delete);
+
+  /**
+   * 获取所有的登记人数
+   */
+  router.get(
+    '/platform/checkin/getAllNum',
+    jwt,
+    admin,
+    controller.checkIn.getAllNum
+  );
 };

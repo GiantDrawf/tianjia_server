@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-03-04 09:51:53
  * @LastEditors: zhujian
- * @LastEditTime: 2021-03-04 10:31:24
+ * @LastEditTime: 2021-03-05 11:43:51
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -58,6 +58,29 @@ class CheckIndController extends BaseController {
     const list = await this.ctx.service.checkIn.query(params);
 
     this.success({ data: list });
+  }
+
+  async delete() {
+    const { id } = this.ctx.request.query;
+
+    const deleteRes = await this.ctx.service.checkIn.delete(id);
+
+    if (deleteRes && deleteRes.ok && deleteRes.n) {
+      this.success({
+        code: 200,
+        msg: '删除登记成功',
+      });
+    } else {
+      this.error({
+        code: 400,
+        msg: '删除登记失败',
+      });
+    }
+  }
+
+  async getAllNum() {
+    const allNum = await this.ctx.service.checkIn.getAllNum();
+    this.success({ data: allNum });
   }
 }
 

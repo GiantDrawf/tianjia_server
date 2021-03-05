@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-03-04 09:53:36
  * @LastEditors: zhujian
- * @LastEditTime: 2021-03-04 10:13:08
+ * @LastEditTime: 2021-03-05 11:45:40
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -51,10 +51,33 @@ class CheckInService extends BaseService {
         model: this.ctx.model.CheckIn,
         searchParams: ['name', 'telephone', 'createTime'],
         timeRangeParams: ['createTime'],
+        select: '',
       },
     });
 
     return res;
+  }
+
+  async delete(_id) {
+    const condition = { _id };
+    const deleteRes = await this.ctx.model.CheckIn.deleteOne(condition);
+
+    return deleteRes;
+  }
+
+  async getAllNum() {
+    const sum = await this.ctx.model.CheckIn.aggregate([
+      { $match: {} },
+      { $project: { numOfPeople: 1 } },
+      {
+        $group: {
+          _id: 0,
+          totalNum: { $sum: '$numOfPeople' },
+        },
+      },
+    ]);
+
+    return (sum && sum[0] && sum[0].totalNum) || 0;
   }
 }
 
