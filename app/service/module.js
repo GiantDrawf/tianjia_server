@@ -1,7 +1,7 @@
 /*
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-18 16:46:08
- * @LastEditTime: 2021-02-25 00:01:23
+ * @LastEditTime: 2021-03-16 14:37:37
  * @LastEditors: zhujian
  * @Description: 模块serives
  * @FilePath: /tianjia_server/app/service/module.js
@@ -112,6 +112,7 @@ class ModuleService extends BaseService {
           'moduleContent.type': 1,
           'moduleContent.thumbnail': 1,
           'moduleContent.createTime': 1,
+          'moduleContent.creator': 1,
         },
       },
     ]);
