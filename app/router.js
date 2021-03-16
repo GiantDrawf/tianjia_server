@@ -14,7 +14,7 @@ module.exports = (app) => {
   /**
    * 后台接口
    */
-  router.get('/platform/performance', controller.os.performance);
+  router.get('/platform/performance', jwt, admin, controller.os.performance);
 
   // 登录接口
   router.post('/platform/user/login', controller.user.login);
