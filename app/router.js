@@ -188,12 +188,7 @@ module.exports = (app) => {
   /**
    * 获取单个模块详情
    */
-  router.get(
-    '/platform/module/getDetail',
-    jwt,
-    admin,
-    controller.module.getDetail
-  );
+  router.get('/common/module/getDetail', controller.module.getDetail);
 
   /**
    * 新增登记

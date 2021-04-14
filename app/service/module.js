@@ -1,13 +1,14 @@
 /*
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-18 16:46:08
- * @LastEditTime: 2021-03-16 14:37:37
+ * @LastEditTime: 2021-04-15 00:26:45
  * @LastEditors: zhujian
  * @Description: 模块serives
  * @FilePath: /tianjia_server/app/service/module.js
  */
 'use strict';
 
+/* eslint-disable indent */
 const BaseService = require('./BaseService');
 const moment = require('moment');
 
@@ -69,55 +70,88 @@ class ModuleService extends BaseService {
   }
 
   async queryDetail(mid) {
-    const moduleDetail = await this.ctx.model.Module.aggregate([
-      { $match: { mid } },
-      {
-        $lookup: {
-          from: 'article',
-          localField: 'moduleContent',
-          foreignField: 'aid',
-          as: 'result',
-        },
-      },
-      // 对联查进行排序
-      { $unwind: '$result' },
-      {
-        $addFields: {
-          sort: {
-            $indexOfArray: ['$moduleContent', '$result.aid'],
-          },
-        },
-      },
-      { $sort: { _id: 1, sort: 1 } },
-      // 组装数据
-      {
-        $group: {
-          _id: '$mid',
-          mid: { $first: '$mid' },
-          moduleName: { $first: '$moduleName' },
-          moduleDesc: { $first: '$moduleDesc' },
-          moduleContent: { $push: '$result' },
-        },
-      },
-      // 限制返回字段
-      {
-        $project: {
-          _id: 0,
-          mid: 1,
-          moduleName: 1,
-          moduleDesc: 1,
-          'moduleContent.aid': 1,
-          'moduleContent.title': 1,
-          'moduleContent.summary': 1,
-          'moduleContent.type': 1,
-          'moduleContent.thumbnail': 1,
-          'moduleContent.createTime': 1,
-          'moduleContent.creator': 1,
-        },
-      },
-    ]);
+    // const moduleDetail = await this.ctx.model.Module.aggregate([
+    //   { $match: { mid } },
+    //   {
+    //     $lookup: {
+    //       from: 'article',
+    //       localField: 'moduleContent.aid',
+    //       foreignField: 'aid',
+    //       as: 'result',
+    //     },
+    //   },
+    //   // 组装数据
+    //   {
+    //     $group: {
+    //       _id: '$mid',
+    //       mid: { $first: '$mid' },
+    //       moduleName: { $first: '$moduleName' },
+    //       moduleDesc: { $first: '$moduleDesc' },
+    //       moduleContent: { $first: '$result' },
+    //     },
+    //   },
+    //   // 限制返回字段
+    //   {
+    //     $project: {
+    //       _id: 0,
+    //       mid: 1,
+    //       moduleName: 1,
+    //       moduleDesc: 1,
+    //       'moduleContent.aid': 1,
+    //       'moduleContent.title': 1,
+    //       'moduleContent.summary': 1,
+    //       'moduleContent.type': 1,
+    //       'moduleContent.thumbnail': 1,
+    //       'moduleContent.createTime': 1,
+    //       'moduleContent.creator': 1,
+    //     },
+    //   },
+    // ]);
 
-    return (moduleDetail && moduleDetail[0]) || {};
+    // return (moduleDetail && moduleDetail[0]) || {};
+    const moduleDetail = await this.ctx.model.Module.findOne({ mid }).select({
+      _id: false,
+      mid: true,
+      moduleName: true,
+      moduleDesc: true,
+      moduleContent: true,
+    });
+    let moduleContent = [...moduleDetail.moduleContent];
+    const aids = moduleContent.map((item) => item.aid);
+    const articles = await this.ctx.model.Article.find({
+      aid: { $in: aids },
+    }).select({
+      _id: false,
+      aid: true,
+      title: true,
+      summary: true,
+      type: true,
+      thumbnail: 1,
+      createTime: true,
+      creator: true,
+    });
+    // 置顶排序
+    const sortTop = (arr) =>
+      arr.sort((a, b) =>
+        !a.isTop && b.isTop ? 1 : a.isTop && !b.isTop ? -1 : 0
+      );
+    // 融合文章详情
+    moduleContent = sortTop(
+      moduleDetail.moduleContent
+        .map((moduleArticle) => {
+          const matchArticle = articles.filter(
+            (aDetail) => aDetail.aid === moduleArticle.aid
+          );
+
+          return Object.assign(
+            moduleArticle.toObject(),
+            matchArticle.length ? matchArticle[0].toObject() : { exist: false }
+          );
+        })
+        .filter((item) => !item.exist)
+    );
+
+    return Object.assign(moduleDetail.toObject(), { moduleContent });
   }
 
   async queryModuleByModuleName(moduleName) {

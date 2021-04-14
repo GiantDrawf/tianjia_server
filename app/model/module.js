@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-16 10:22:25
  * @LastEditors: zhujian
- * @LastEditTime: 2021-01-11 18:58:22
+ * @LastEditTime: 2021-04-14 23:51:27
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -23,7 +23,12 @@ module.exports = function (app) {
       // 模块介绍
       moduleDesc: { type: String },
       // 模块内容
-      moduleContent: [{ type: String, ref: 'article' }],
+      moduleContent: [
+        {
+          aid: { type: String },
+          isTop: { type: Boolean, default: false },
+        },
+      ],
       // 创建人
       creator: { type: String },
       // 创建时间
