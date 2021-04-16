@@ -9,7 +9,7 @@
   "dependencies": {
     "await-stream-ready": "^1.0.1",
     "crypto": "^1.0.1",
-    "egg": "^2.29.3",
+    "egg": "^2.29.4",
     "egg-cors": "^2.2.3",
     "egg-jwt": "^3.1.7",
     "egg-mongoose": "^3.3.1",
@@ -17,7 +17,7 @@
     "egg-userrole": "^2.1.0",
     "egg-validate-plus": "^1.1.6",
     "lodash": "^4.17.21",
-    "mongoose-paginate-v2": "^1.3.16",
+    "mongoose-paginate-v2": "^1.3.17",
     "node-os-utils": "^1.3.5",
     "request": "^2.88.2",
     "stream-wormhole": "^1.1.0",
@@ -28,8 +28,8 @@
     "autod-egg": "^1.1.0",
     "egg-bin": "^4.15.0",
     "egg-ci": "^1.18.0",
-    "egg-mock": "^4.0.1",
-    "eslint": "^7.20.0",
+    "egg-mock": "^4.1.0",
+    "eslint": "^7.24.0",
     "eslint-config-egg": "^9.0.0"
   },
   "engines": {
