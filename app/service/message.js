@@ -47,6 +47,9 @@ class MessageService extends BaseService {
         ],
         fuzzySearchParams: ['title', 'content', 'name', 'contact'], // 支持模糊搜索的字段名
         timeRangeParams: ['createTime', 'replayTime'],
+        sort: {
+          createTime: -1,
+        },
       },
     });
 

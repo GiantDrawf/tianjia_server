@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-03-04 09:53:36
  * @LastEditors: zhujian
- * @LastEditTime: 2021-03-05 11:45:40
+ * @LastEditTime: 2021-04-21 11:30:59
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -52,6 +52,9 @@ class CheckInService extends BaseService {
         searchParams: ['name', 'telephone', 'createTime'],
         timeRangeParams: ['createTime'],
         select: '',
+        sort: {
+          createTime: -1,
+        },
       },
     });
 

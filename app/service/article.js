@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-10 17:39:29
  * @LastEditors: zhujian
- * @LastEditTime: 2021-01-12 09:25:51
+ * @LastEditTime: 2021-04-21 13:39:38
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -80,6 +80,7 @@ class ArticleService extends BaseService {
         ], // 支持模糊搜索的字段名
         timeRangeParams: ['createTime', 'updateTime'],
         select: '-_id',
+        sort: params.sort || {},
       },
     });
 

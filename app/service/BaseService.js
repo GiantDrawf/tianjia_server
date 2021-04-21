@@ -1,3 +1,10 @@
+/*
+ * @Author: zhujian1995@outlook.com
+ * @Date: 2020-11-13 14:07:34
+ * @LastEditors: zhujian
+ * @LastEditTime: 2021-04-21 10:52:32
+ * @Description: 你 kin 你擦
+ */
 'use strict';
 
 const Service = require('egg').Service;
@@ -16,6 +23,7 @@ class BaseService extends Service {
       fuzzySearchParams = [], // 支持模糊搜索的字段名
       timeRangeParams = [], // 时间范围搜索的字段名
       select = '-_id', // 限制返回字段
+      sort = {}, // 排序字段
     } = options;
 
     // model必须要填
@@ -66,6 +74,7 @@ class BaseService extends Service {
       page,
       limit: pageSize,
       select,
+      sort,
     });
 
     if (res) {

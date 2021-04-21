@@ -1,7 +1,7 @@
 /*
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-18 16:46:08
- * @LastEditTime: 2021-04-15 00:26:45
+ * @LastEditTime: 2021-04-21 13:52:07
  * @LastEditors: zhujian
  * @Description: 模块serives
  * @FilePath: /tianjia_server/app/service/module.js
@@ -63,13 +63,14 @@ class ModuleService extends BaseService {
         fuzzySearchParams: ['moduleName', 'moduleDesc', 'creator', 'updater'], // 支持模糊搜索的字段名
         timeRangeParams: ['createTime', 'updateTime'],
         select: '-_id',
+        sort: params.sort || {},
       },
     });
 
     return res;
   }
 
-  async queryDetail(mid) {
+  async queryDetail({ mid, showLimit = 0, needAContent = 0 }) {
     // const moduleDetail = await this.ctx.model.Module.aggregate([
     //   { $match: { mid } },
     //   {
@@ -109,6 +110,7 @@ class ModuleService extends BaseService {
     // ]);
 
     // return (moduleDetail && moduleDetail[0]) || {};
+    const _needAContent = Number(needAContent) === 1;
     const moduleDetail = await this.ctx.model.Module.findOne({ mid }).select({
       _id: false,
       mid: true,
@@ -121,14 +123,15 @@ class ModuleService extends BaseService {
     const articles = await this.ctx.model.Article.find({
       aid: { $in: aids },
     }).select({
-      _id: false,
-      aid: true,
-      title: true,
-      summary: true,
-      type: true,
+      _id: 0,
+      aid: 1,
+      title: 1,
+      content: 1,
+      summary: 1,
+      type: 1,
       thumbnail: 1,
-      createTime: true,
-      creator: true,
+      createTime: 1,
+      creator: 1,
     });
     // 置顶排序
     const sortTop = (arr) =>
@@ -145,11 +148,22 @@ class ModuleService extends BaseService {
 
           return Object.assign(
             moduleArticle.toObject(),
-            matchArticle.length ? matchArticle[0].toObject() : { exist: false }
+            // 去掉_id
+            { _id: undefined },
+            matchArticle.length ? matchArticle[0].toObject() : { exist: false },
+            // 是否需要文章内容
+            _needAContent ? {} : { content: undefined }
           );
         })
         .filter((item) => !item.exist)
     );
+
+    const _showLimit = Number(showLimit);
+
+    // 限制输出条数
+    if (_showLimit) {
+      moduleContent = moduleContent.slice(0, _showLimit);
+    }
 
     return Object.assign(moduleDetail.toObject(), { moduleContent });
   }

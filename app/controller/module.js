@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-18 17:39:52
  * @LastEditors: zhujian
- * @LastEditTime: 2021-01-13 16:42:18
+ * @LastEditTime: 2021-04-20 17:58:53
  * @Description: 模块Controller
  */
 'use strict';
@@ -121,7 +121,7 @@ class ModuleController extends BaseController {
    */
   async getDetail() {
     const moduleDetail = await this.ctx.service.module.queryDetail(
-      this.ctx.request.query.mid
+      this.ctx.request.query
     );
 
     this.success({ data: moduleDetail });
