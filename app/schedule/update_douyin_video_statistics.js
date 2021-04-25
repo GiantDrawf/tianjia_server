@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-25 14:36:56
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-25 14:51:17
+ * @LastEditTime: 2021-04-25 17:54:18
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -16,6 +16,7 @@ class UpdateStatistics extends Subscription {
       interval: '1h',
       type: 'worker',
       env: ['prod'],
+      immediate: true,
     };
   }
 

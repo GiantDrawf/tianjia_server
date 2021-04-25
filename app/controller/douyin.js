@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-25 14:55:55
+ * @LastEditTime: 2021-04-25 15:39:00
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -68,6 +68,7 @@ class DyUserController extends BaseController {
   //   });
   // }
 
+  // 获取热门视频列表并落库
   async getHotList() {
     const hotListRes = await rp({
       uri:
@@ -139,6 +140,7 @@ class DyUserController extends BaseController {
     inTurnBatchVideos();
   }
 
+  // 更新所有视频的统计信息
   async updateAllVideos() {
     const allVideos = await this.ctx.model.DyVideo.find({}).select('-_id vid');
     let newStatisticsVideos = [];
@@ -178,6 +180,13 @@ class DyUserController extends BaseController {
     await inTurnBatchVideos();
 
     await this.ctx.service.dyVideo.batchUpdateStatistics(newStatisticsVideos);
+  }
+
+  async query() {
+    const params = this.ctx.request.body;
+    const list = await this.ctx.service.dyVideo.query(params);
+
+    this.success({ data: list });
   }
 }
 

@@ -231,4 +231,9 @@ module.exports = (app) => {
   //   admin,
   //   controller.douyin.updateAllVideos
   // );
+
+  /**
+   * 分页查询
+   */
+  router.post('/platform/douyin/query', jwt, admin, controller.douyin.query);
 };
