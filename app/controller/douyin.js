@@ -2,15 +2,15 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-25 15:39:00
+ * @LastEditTime: 2021-04-25 18:11:17
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
 
 const BaseController = require('./BaseController');
 const rp = require('request-promise');
-// const zlib = require('zlib');
 const moment = require('moment');
+// const zlib = require('zlib');
 // const {
 //   constructRecommendedListParams,
 //   constructHearders,
@@ -138,48 +138,6 @@ class DyUserController extends BaseController {
     }
 
     inTurnBatchVideos();
-  }
-
-  // 更新所有视频的统计信息
-  async updateAllVideos() {
-    const allVideos = await this.ctx.model.DyVideo.find({}).select('-_id vid');
-    let newStatisticsVideos = [];
-
-    async function inTurnBatchVideos() {
-      const inTurnVideos = allVideos.splice(0, 20);
-      const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=${inTurnVideos
-        .map((item) => item.vid)
-        .join(',')}`;
-      const videosDetail = await rp({
-        uri: inTurnsApi,
-        json: true,
-      });
-      if (
-        videosDetail &&
-        videosDetail.item_list &&
-        videosDetail.item_list.length
-      ) {
-        const videosDetailList = videosDetail.item_list;
-        videosDetailList.forEach((itemDetail) => {
-          inTurnVideos.forEach((originItem) => {
-            if (originItem.vid === itemDetail.aweme_id) {
-              originItem.statistics = {
-                [`${moment().format('YYYY-MM-DD_HH')}`]: itemDetail.statistics,
-              };
-            }
-          });
-        });
-      }
-      newStatisticsVideos = newStatisticsVideos.concat(inTurnVideos);
-
-      if (allVideos.length) {
-        await inTurnBatchVideos();
-      }
-    }
-
-    await inTurnBatchVideos();
-
-    await this.ctx.service.dyVideo.batchUpdateStatistics(newStatisticsVideos);
   }
 
   async query() {

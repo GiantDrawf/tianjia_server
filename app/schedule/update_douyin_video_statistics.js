@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-25 14:36:56
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-25 17:54:18
+ * @LastEditTime: 2021-04-25 18:17:15
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -23,7 +23,9 @@ class UpdateStatistics extends Subscription {
   // subscribe 是真正定时任务执行时被运行的函数
   async subscribe() {
     console.log('执行更新');
-    await this.app.controller.douyin.updateAllVideos();
+    // await this.app.Service.;
+    const ctx = await this.app.createAnonymousContext();
+    await ctx.service.dyVideo.updateAllVideos();
   }
 }
 

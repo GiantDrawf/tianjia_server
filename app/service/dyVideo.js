@@ -2,12 +2,14 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:18:31
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-25 15:37:40
+ * @LastEditTime: 2021-04-25 18:11:56
  * @Description: 你 kin 你擦
  */
 'use strict';
 
 const BaseService = require('./BaseService');
+const rp = require('request-promise');
+const moment = require('moment');
 
 class DyVideoService extends BaseService {
   async batchCreate(videos) {
@@ -43,6 +45,48 @@ class DyVideoService extends BaseService {
     });
 
     return res;
+  }
+
+  // 更新所有视频的统计信息
+  async updateAllVideos() {
+    const allVideos = await this.ctx.model.DyVideo.find({}).select('-_id vid');
+    let newStatisticsVideos = [];
+
+    async function inTurnBatchVideos() {
+      const inTurnVideos = allVideos.splice(0, 20);
+      const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=${inTurnVideos
+        .map((item) => item.vid)
+        .join(',')}`;
+      const videosDetail = await rp({
+        uri: inTurnsApi,
+        json: true,
+      });
+      if (
+        videosDetail &&
+        videosDetail.item_list &&
+        videosDetail.item_list.length
+      ) {
+        const videosDetailList = videosDetail.item_list;
+        videosDetailList.forEach((itemDetail) => {
+          inTurnVideos.forEach((originItem) => {
+            if (originItem.vid === itemDetail.aweme_id) {
+              originItem.statistics = {
+                [`${moment().format('YYYY-MM-DD_HH')}`]: itemDetail.statistics,
+              };
+            }
+          });
+        });
+      }
+      newStatisticsVideos = newStatisticsVideos.concat(inTurnVideos);
+
+      if (allVideos.length) {
+        await inTurnBatchVideos();
+      }
+    }
+
+    await inTurnBatchVideos();
+
+    await this.batchUpdateStatistics(newStatisticsVideos);
   }
 }
 
