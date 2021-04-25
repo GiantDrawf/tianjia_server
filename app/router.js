@@ -214,4 +214,21 @@ module.exports = (app) => {
     admin,
     controller.checkIn.getAllNum
   );
+
+  // 获取抖音推荐视频
+  // router.get(
+  //   '/douyin/getRecommendedAweme',
+  //   controller.douyin.getRecommendedAweme
+  // );
+
+  // 获取抖音热榜所有视频
+  router.get('/douyin/getHotList', jwt, admin, controller.douyin.getHotList);
+
+  // 更新所有视频的统计数据
+  // router.get(
+  //   '/douyin/updateStatistics',
+  //   jwt,
+  //   admin,
+  //   controller.douyin.updateAllVideos
+  // );
 };
