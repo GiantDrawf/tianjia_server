@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:18:31
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-25 18:11:56
+ * @LastEditTime: 2021-04-26 10:51:57
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -36,9 +36,9 @@ class DyVideoService extends BaseService {
       params,
       options: {
         model: this.ctx.model.DyVideo,
-        searchParams: ['title'],
+        searchParams: ['title', 'vid'],
         fuzzySearchParams: ['title'], // 支持模糊搜索的字段名
-        timeRangeParams: ['create_time'],
+        timeRangeParams: [],
         select: '-_id',
         sort: params.sort || {},
       },
