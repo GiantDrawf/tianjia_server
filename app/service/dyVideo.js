@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:18:31
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 13:25:48
+ * @LastEditTime: 2021-04-27 16:07:15
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -61,6 +61,7 @@ class DyVideoService extends BaseService {
 
   // 更新所有视频的统计信息
   async updateAllVideos() {
+    this.ctx.logger.warn('执行视频更新');
     const allVideos = await this.getAllVideos();
     let newStatisticsVideos = [];
     const now = moment().format('YYYY-MM-DD_HH');

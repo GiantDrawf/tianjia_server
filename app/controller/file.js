@@ -114,7 +114,7 @@ class FileController extends BaseController {
               }
             })
             .on('error', (e) => {
-              console.log('pipe error', e);
+              this.ctx.logger.error('pipe error', e);
               resolve({ [`${itemImage}`]: '' });
             })
             .on('close', () => {

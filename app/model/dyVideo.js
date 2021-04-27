@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:14:23
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-26 23:21:10
+ * @LastEditTime: 2021-04-27 16:44:07
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -13,21 +13,27 @@ module.exports = function (app) {
 
   const DyVideoSchema = new Schema(
     {
-      link: { type: String },
+      img_url: { type: String }, // 视频封面
+      link: { type: String }, // 分享链接
+      sec_item_id: { type: String }, // 不知道什么id，先记着
       title: {
         type: String,
-      },
-      tag: { type: Array },
-      vid: { type: String },
+      }, // 视频标题
+      vid: { type: String }, // 视频vid
+      category: { type: Number }, // 分类
       sec_uid: {
         type: String,
-      },
+      }, // 作者加密uid
+      author: { type: String }, // 视频作者
+      uid: { type: String }, // 视频作者uid
+      music_author: { type: String }, // 背景音乐作者
+      tag: { type: Array }, // 标签
       duration: {
         type: Number,
-      },
+      }, // 时长
       create_time: {
         type: Number,
-      },
+      }, // 创建时间
       city: {
         type: String,
       },

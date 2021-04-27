@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-26 23:41:05
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 14:02:53
+ * @LastEditTime: 2021-04-27 16:07:30
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -36,7 +36,6 @@ class DyUserService extends BaseService {
           : null
       )
       .filter((item) => !!item);
-    console.log(operations);
     const updateRes = await this.ctx.model.DyUser.bulkWrite(operations);
 
     return updateRes;
@@ -44,10 +43,12 @@ class DyUserService extends BaseService {
 
   // 更新所有视频的统计信息
   async updateAllUsers() {
+    this.ctx.logger.warn('执行账号更新');
     const allUsers = await this.getAllUsers();
     const uids = allUsers.map((item) => item.sec_uid);
     const newStatisticsUsers = [];
     const now = moment().format('YYYY-MM-DD_HH');
+    const _this = this;
 
     async function inTurnToBatchUser(_uids) {
       const inTurnUid = _uids.shift();
@@ -76,14 +77,14 @@ class DyUserService extends BaseService {
             },
           },
         };
-        console.log(`更新账号${inTurnUid}`);
+        _this.ctx.logger.warn(`更新账号${inTurnUid}`);
         newStatisticsUsers.push(userDetail);
       }
 
       if (_uids.length) {
         await inTurnToBatchUser(_uids);
       } else {
-        console.log('账号统计信息更新完成');
+        _this.ctx.logger.warn('账号统计信息更新完成');
       }
     }
 

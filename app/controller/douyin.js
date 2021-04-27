@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 14:55:50
+ * @LastEditTime: 2021-04-27 16:55:33
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -190,36 +190,35 @@ class DyUserController extends BaseController {
           (allBillboardData = allBillboardData.concat(item.billboard_data))
       );
 
-    // const allResult = await rp({
-    //   uri: `https://creator.douyin.com/aweme/v1/creator/data/billboard/?billboard_type=${this.ctx.request.query.billboard_type}`,
-    //   json: true,
-    //   headers: {
-    //     cookie:
-    //       'passport_csrf_token_default=fe9d1b870b947a1d03b7627106b7441b; passport_csrf_token=fe9d1b870b947a1d03b7627106b7441b; sso_auth_status=1bf40686aceb5ebd5d1f1660b554b8c5; sso_auth_status_ss=1bf40686aceb5ebd5d1f1660b554b8c5; ttcid=49b0a565363c400fb9729b881fc3339929; csrf_token=pmzPVItSYMVBBtJvpTrZcfiuSGIUrLGh; n_mh=chjkcQtGu7Rlb3H90XmMN8_XX_UIUrrIGKl0uKpkgAE; sso_uid_tt=1bcb6a91ae8f2cac93e78839e5807085; sso_uid_tt_ss=1bcb6a91ae8f2cac93e78839e5807085; toutiao_sso_user=472d54eb04422f02484cac2ec26e512f; toutiao_sso_user_ss=472d54eb04422f02484cac2ec26e512f; odin_tt=c142a7105bb6ddeca41fc0bbb22b5e253ff5420877f6f89a46214decbfe2bc8ffbf13de947933d1f2dc3d177f934b2ce; passport_auth_status_ss=70fc4b84e84adac4828ff3df7dfeb1d8%2Cea5596a63e8e22b619fe334700e84f5d; sid_guard=d3779dbeb35e39d2579d706be64dbfb5%7C1619276780%7C5183999%7CWed%2C+23-Jun-2021+15%3A06%3A19+GMT; uid_tt=91a074ca93b8672de34342eb4ae590b4; uid_tt_ss=91a074ca93b8672de34342eb4ae590b4; sid_tt=d3779dbeb35e39d2579d706be64dbfb5; sessionid=d3779dbeb35e39d2579d706be64dbfb5; sessionid_ss=d3779dbeb35e39d2579d706be64dbfb5; passport_auth_status=70fc4b84e84adac4828ff3df7dfeb1d8%2Cea5596a63e8e22b619fe334700e84f5d; oc_login_type=LOGIN_PERSON; s_v_web_id=knynb1ni_1hUILYoP_BINH_4Z4e_B5L0_NVzbb6rlzDcN; ttwid=1%7Cnl__vDcu1v0czwYNGTaKxgO9To4L5sxolaritEoZeYY%7C1619448825%7C294d7fcb1ffe74f22d6a6fcc5f43df4aa9c35952feaa3b08d40b1a805b87e445; MONITOR_WEB_ID=48e5959f-97cc-4c5d-972f-d9339cf7449e; tt_scid=.jOr.X1QSp6zN6mtMWWihIakb7nJh3ONxuJ7RLRaJBa-ux417ddvp.ZRUw6BMACj5a67',
-    //   },
-    // });
-    // const allBillboardData = (allResult && allResult.billboard_data) || [];
-
     const now = moment().format('YYYY-MM-DD_HH');
     const allVideos = await this.ctx.service.dyVideo.getAllVideos();
     const existsVids = allVideos.map((item) => item.vid);
-    const vids = [];
+    const grabVideos = [];
 
     const allUsers = await this.ctx.service.dyUser.getAllUsers();
     const existsUids = allUsers.map((item) => item.sec_uid);
-    const uids = [];
+    const grabUsers = [];
 
-    allBillboardData.forEach((itemRank) => {
-      const { extra_list = [], link: author_share_url } = itemRank;
+    allBillboardData.forEach((itemRank, index) => {
+      const {
+        extra_list = [],
+        link,
+        img_url: author_thumb,
+        title: author_name,
+      } = itemRank;
       // 用户加密uid
       const sec_uid =
-        (author_share_url.split('?')[1] &&
-          getUrlParams(author_share_url.split('?')[1]).sec_uid) ||
-        '';
+        (link.split('?')[1] && getUrlParams(link.split('?')[1]).sec_uid) || '';
       // 防重复
       if (!existsUids.includes(sec_uid)) {
         existsUids.push(sec_uid);
-        uids.push(sec_uid);
+        grabUsers.push({
+          sec_uid,
+          link,
+          author_name,
+          author_thumb,
+          category: billboard_types[index],
+        });
       }
 
       if (extra_list && extra_list.length) {
@@ -228,28 +227,35 @@ class DyUserController extends BaseController {
           // 防重复
           if (!existsVids.includes(vid)) {
             existsVids.push(vid);
-            vids.push(vid);
+            grabVideos.push({
+              ...itemVideo,
+              vid,
+              category: billboard_types[index],
+              sec_uid,
+            });
           }
         });
       }
     });
 
-    this.success({ data: `视频 ${vids.length} 个, 账号 ${uids.length} 个` });
+    this.success({
+      data: `视频 ${grabVideos.length} 个, 账号 ${grabUsers.length} 个`,
+    });
 
-    this.handleVideoData(vids, now);
+    this.handleVideoData(grabVideos, now);
 
-    this.handleUserData(uids, now);
+    this.handleUserData(grabUsers, now);
   }
 
-  async handleVideoData(vids, now) {
+  async handleVideoData(grabVideos, now) {
     const _this = this;
 
     // 开始分批请求数据，先请求
-    async function inTurnToBatchVideos(_vids) {
-      const inTurnVideos = _vids.splice(0, 20);
-      const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=${inTurnVideos.join(
-        ','
-      )}`;
+    async function inTurnToBatchVideos(_grabVideos) {
+      const inTurnVideos = _grabVideos.splice(0, 20);
+      const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=${inTurnVideos
+        .map((item) => item.vid)
+        .join(',')}`;
       const videosDetail = await rp({
         uri: inTurnsApi,
         json: true,
@@ -262,18 +268,19 @@ class DyUserController extends BaseController {
       ) {
         const videosDetailList = videosDetail.item_list;
         videosDetailList.forEach((itemDetail) => {
-          inTurnVideos.forEach((originItemVid) => {
-            if (originItemVid === itemDetail.aweme_id) {
+          inTurnVideos.forEach((originItem) => {
+            if (originItem.vid === itemDetail.aweme_id) {
               packageItemVideos.push({
-                link: itemDetail.share_url,
-                title: itemDetail.desc,
+                ...originItem,
+                author: (itemDetail.author && itemDetail.author.nickname) || '',
+                uid: (itemDetail.author && itemDetail.author.uid) || '',
+                music_author:
+                  (itemDetail.music && itemDetail.music.author) || '',
                 tag:
                   itemDetail.text_extra &&
                   itemDetail.text_extra
                     .map((itemTag) => itemTag.hashtag_name)
                     .filter((item) => item !== ''),
-                vid: originItemVid,
-                sec_uid: itemDetail.author_user_id,
                 duration: itemDetail.duration,
                 create_time: itemDetail.create_time,
                 city: itemDetail.city || '',
@@ -291,25 +298,25 @@ class DyUserController extends BaseController {
       }
       // 落库
       if (packageItemVideos.length) {
-        console.log(`落库视频${packageItemVideos.length}条`);
+        _this.ctx.logger.warn(`落库视频${packageItemVideos.length}条`);
         await _this.ctx.service.dyVideo.batchCreate(packageItemVideos);
       }
 
-      if (_vids.length) {
-        inTurnToBatchVideos(_vids);
+      if (_grabVideos.length) {
+        inTurnToBatchVideos(_grabVideos);
       } else {
-        console.log('视频落库完成');
+        _this.ctx.logger.warn('视频落库完成');
       }
     }
 
-    inTurnToBatchVideos(vids);
+    inTurnToBatchVideos(grabVideos);
   }
 
-  async handleUserData(uids, now) {
+  async handleUserData(grabUsers, now) {
     const _this = this;
-    async function inTurnToBatchUser(_uids) {
-      const inTurnUid = _uids.shift();
-      const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/user/info/?sec_uid=${inTurnUid}`;
+    async function inTurnToBatchUser(_grabUsers) {
+      const inTurnUser = _grabUsers.shift();
+      const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/user/info/?sec_uid=${inTurnUser.sec_uid}`;
       const userDetailRes = await rp({
         uri: inTurnsApi,
         json: true,
@@ -322,13 +329,7 @@ class DyUserController extends BaseController {
       ) {
         const userInfo = userDetailRes.user_info;
         const userDetail = {
-          author_thumb:
-            userInfo.avatar_thumb &&
-            userInfo.avatar_thumb.url_list &&
-            userInfo.avatar_thumb.url_list.length &&
-            userInfo.avatar_thumb.url_list[0],
-          sec_uid: inTurnUid,
-          author_name: userInfo.nickname,
+          ...inTurnUser,
           signature: userInfo.signature,
           region: userInfo.region,
           statistics: [
@@ -344,18 +345,18 @@ class DyUserController extends BaseController {
             },
           ],
         };
-        console.log(`账号 ${inTurnUid} 落库`);
+        _this.ctx.logger.warn(`账号 ${inTurnUser.sec_uid} 落库`);
         await _this.ctx.service.dyUser.create(userDetail);
       }
 
-      if (_uids.length) {
-        inTurnToBatchUser(_uids);
+      if (_grabUsers.length) {
+        inTurnToBatchUser(_grabUsers);
       } else {
-        console.log('账号落库完成');
+        _this.ctx.logger.warn('账号落库完成');
       }
     }
 
-    inTurnToBatchUser(uids);
+    inTurnToBatchUser(grabUsers);
   }
 }
 
