@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 16:55:33
+ * @LastEditTime: 2021-04-27 17:29:07
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -199,39 +199,44 @@ class DyUserController extends BaseController {
     const existsUids = allUsers.map((item) => item.sec_uid);
     const grabUsers = [];
 
-    allBillboardData.forEach((itemRank, index) => {
-      const {
-        extra_list = [],
-        link,
-        img_url: author_thumb,
-        title: author_name,
-      } = itemRank;
-      // 用户加密uid
-      const sec_uid =
-        (link.split('?')[1] && getUrlParams(link.split('?')[1]).sec_uid) || '';
-      // 防重复
-      if (!existsUids.includes(sec_uid)) {
-        existsUids.push(sec_uid);
-        grabUsers.push({
-          sec_uid,
-          link,
-          author_name,
-          author_thumb,
-          category: billboard_types[index],
-        });
-      }
-
-      if (extra_list && extra_list.length) {
-        extra_list.forEach((itemVideo) => {
-          const vid = itemVideo.link.split('/')[5] || '';
+    allResult.forEach((itemRes, index) => {
+      if (itemRes && itemRes.billboard_data && itemRes.billboard_data.length) {
+        itemRes.billboard_data.forEach((itemRank) => {
+          const {
+            extra_list = [],
+            link,
+            img_url: author_thumb,
+            title: author_name,
+          } = itemRank;
+          // 用户加密uid
+          const sec_uid =
+            (link.split('?')[1] && getUrlParams(link.split('?')[1]).sec_uid) ||
+            '';
           // 防重复
-          if (!existsVids.includes(vid)) {
-            existsVids.push(vid);
-            grabVideos.push({
-              ...itemVideo,
-              vid,
-              category: billboard_types[index],
+          if (!existsUids.includes(sec_uid)) {
+            existsUids.push(sec_uid);
+            grabUsers.push({
               sec_uid,
+              link,
+              author_name,
+              author_thumb,
+              category: billboard_types[index],
+            });
+          }
+
+          if (extra_list && extra_list.length) {
+            extra_list.forEach((itemVideo) => {
+              const vid = itemVideo.link.split('/')[5] || '';
+              // 防重复
+              if (!existsVids.includes(vid)) {
+                existsVids.push(vid);
+                grabVideos.push({
+                  ...itemVideo,
+                  vid,
+                  category: billboard_types[index],
+                  sec_uid,
+                });
+              }
             });
           }
         });

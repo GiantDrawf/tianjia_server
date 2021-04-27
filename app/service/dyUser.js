@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-26 23:41:05
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 16:07:30
+ * @LastEditTime: 2021-04-27 17:31:45
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -98,7 +98,7 @@ class DyUserService extends BaseService {
       params,
       options: {
         model: this.ctx.model.DyUser,
-        searchParams: ['author_name', 'sec_uid'],
+        searchParams: ['author_name', 'sec_uid', 'category'],
         fuzzySearchParams: ['author_name'], // 支持模糊搜索的字段名
         timeRangeParams: [],
         select: '-_id',
