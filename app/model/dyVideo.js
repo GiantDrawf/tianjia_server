@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:14:23
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-25 14:03:16
+ * @LastEditTime: 2021-04-26 23:21:10
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -13,14 +13,13 @@ module.exports = function (app) {
 
   const DyVideoSchema = new Schema(
     {
-      img_url: { type: String },
       link: { type: String },
-      sec_item_id: { type: String },
       title: {
         type: String,
       },
+      tag: { type: Array },
       vid: { type: String },
-      author_user_id: {
+      sec_uid: {
         type: String,
       },
       duration: {

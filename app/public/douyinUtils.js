@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:58:35
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-23 22:48:02
+ * @LastEditTime: 2021-04-26 22:38:27
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -72,7 +72,22 @@ const constructHearders = (api, host, ts) => ({
   'x-gorgon': start(api, ts.slice(0, 10), cookies),
 });
 
+const getUrlParams = (queryStr) => {
+  const result = {};
+  const params = queryStr.split('&');
+  let param = [];
+
+  for (let i = 0, iLen = params.length; i < iLen; i++) {
+    param = params[i].split('=');
+    if (param.length === 2) {
+      result[param[0]] = decodeURIComponent(param[1]);
+    }
+  }
+  return result;
+};
+
 module.exports = {
   constructRecommendedListParams,
   constructHearders,
+  getUrlParams,
 };

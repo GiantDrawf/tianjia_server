@@ -1,8 +1,9 @@
+/* eslint-disable indent */
 /*
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:18:31
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-26 10:51:57
+ * @LastEditTime: 2021-04-27 13:25:48
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -19,13 +20,18 @@ class DyVideoService extends BaseService {
   }
 
   async batchUpdateStatistics(newVideoStatistics) {
-    console.log(newVideoStatistics);
-    const operations = newVideoStatistics.map((item) => ({
-      updateOne: {
-        filter: { vid: item.vid },
-        update: { $addToSet: { statistics: item.statistics } },
-      },
-    }));
+    const operations = newVideoStatistics
+      .map((item) =>
+        item.statistics
+          ? {
+              updateOne: {
+                filter: { vid: item.vid },
+                update: { $addToSet: { statistics: item.statistics } },
+              },
+            }
+          : null
+      )
+      .filter((item) => !!item);
     const updateRes = await this.ctx.model.DyVideo.bulkWrite(operations);
 
     return updateRes;
@@ -47,10 +53,17 @@ class DyVideoService extends BaseService {
     return res;
   }
 
+  async getAllVideos() {
+    const res = await this.ctx.model.DyVideo.find({});
+
+    return res;
+  }
+
   // 更新所有视频的统计信息
   async updateAllVideos() {
-    const allVideos = await this.ctx.model.DyVideo.find({}).select('-_id vid');
+    const allVideos = await this.getAllVideos();
     let newStatisticsVideos = [];
+    const now = moment().format('YYYY-MM-DD_HH');
 
     async function inTurnBatchVideos() {
       const inTurnVideos = allVideos.splice(0, 20);
@@ -71,7 +84,7 @@ class DyVideoService extends BaseService {
           inTurnVideos.forEach((originItem) => {
             if (originItem.vid === itemDetail.aweme_id) {
               originItem.statistics = {
-                [`${moment().format('YYYY-MM-DD_HH')}`]: itemDetail.statistics,
+                [`${now}`]: itemDetail.statistics,
               };
             }
           });

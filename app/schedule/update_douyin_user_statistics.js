@@ -2,14 +2,14 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-25 14:36:56
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 13:42:21
+ * @LastEditTime: 2021-04-27 13:42:12
  * @Description: 你 kin 你擦
  */
 'use strict';
 
 const Subscription = require('egg').Subscription;
 
-class UpdateStatistics extends Subscription {
+class UpdateUsersStatistics extends Subscription {
   // 通过 schedule 属性来设置定时任务的执行间隔等配置
   static get schedule() {
     return {
@@ -21,10 +21,10 @@ class UpdateStatistics extends Subscription {
 
   // subscribe 是真正定时任务执行时被运行的函数
   async subscribe() {
-    console.log('执行更新');
+    console.log('执行账号更新');
     const ctx = await this.app.createAnonymousContext();
-    await ctx.service.dyVideo.updateAllVideos();
+    await ctx.service.dyUser.updateAllUsers();
   }
 }
 
-module.exports = UpdateStatistics;
+module.exports = UpdateUsersStatistics;

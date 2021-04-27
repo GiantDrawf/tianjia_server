@@ -222,10 +222,18 @@ module.exports = (app) => {
   // );
 
   // 获取抖音热榜所有视频
-  router.get('/douyin/getHotList', jwt, admin, controller.douyin.getHotList);
+  // router.get('/douyin/getHotList', jwt, admin, controller.douyin.getHotList);
 
   /**
    * 分页查询
    */
   router.post('/platform/douyin/query', jwt, admin, controller.douyin.query);
+
+  // 获取分类榜单所有视频及账号信息
+  router.get(
+    '/douyin/getAllBillboard',
+    jwt,
+    admin,
+    controller.douyin.getBillboardDetail
+  );
 };

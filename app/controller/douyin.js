@@ -1,8 +1,9 @@
+/* eslint-disable indent */
 /*
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-25 18:11:17
+ * @LastEditTime: 2021-04-27 13:06:16
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -10,63 +11,64 @@
 const BaseController = require('./BaseController');
 const rp = require('request-promise');
 const moment = require('moment');
-// const zlib = require('zlib');
-// const {
-//   constructRecommendedListParams,
-//   constructHearders,
-// } = require('../public/douyinUtils');
+const zlib = require('zlib');
+const {
+  constructRecommendedListParams,
+  constructHearders,
+  getUrlParams,
+} = require('../public/douyinUtils');
 
 class DyUserController extends BaseController {
-  // async getRecommendedAweme() {
-  //   const ts = new Date().getTime().toString();
-  //   const params = constructRecommendedListParams(ts);
-  //   const apiUrl = `https://aweme-eagle.snssdk.com/aweme/v1/feed/?${Object.keys(
-  //     params
-  //   )
-  //     .map((itemKey) => `${itemKey}=${params[itemKey]}`)
-  //     .join('&')}`;
-  //   const headers = constructHearders(apiUrl, 'aweme-eagle.snssdk.com', ts);
-  //   const res = await rp({
-  //     uri: apiUrl,
-  //     headers,
-  //     json: true,
-  //     encoding: null,
-  //   });
-  //   const _this = this;
-  //   await new Promise((resolve, reject) => {
-  //     zlib.unzip(res, function (err, result) {
-  //       if (err) {
-  //         _this.error();
-  //         reject(err);
-  //       } else {
-  //         const resJson = JSON.parse(result);
-  //         _this.success({ data: resJson });
-  //         if (resJson && resJson.aweme_list) {
-  //           const cleanData = resJson.aweme_list.map((item) => ({
-  //             author_user_id: String(item.author_user_id),
-  //             aweme_id: item.aweme_id,
-  //             city: item.city,
-  //             desc: item.desc,
-  //             create_time: item.create_time,
-  //             duration: item.duration,
-  //             statistics: {
-  //               [`${moment().format('YYYY-MM-DD-HH')}`]: item.statistics,
-  //             },
-  //           }));
-  //           resolve(cleanData);
-  //         } else {
-  //           _this.error();
-  //           reject(new Error());
-  //         }
-  //       }
-  //     });
-  //   }).then(async (cleanData) => {
-  //     // const createRes =
-  //     await this.ctx.service.dyVideo.batchCreate(cleanData);
-  //     // _this.success({ data: createRes });
-  //     Promise.resolve();
-  //   });
-  // }
+  async getRecommendedAweme() {
+    const ts = new Date().getTime().toString();
+    const params = constructRecommendedListParams(ts);
+    const apiUrl = `https://aweme-eagle.snssdk.com/aweme/v1/feed/?${Object.keys(
+      params
+    )
+      .map((itemKey) => `${itemKey}=${params[itemKey]}`)
+      .join('&')}`;
+    const headers = constructHearders(apiUrl, 'aweme-eagle.snssdk.com', ts);
+    const res = await rp({
+      uri: apiUrl,
+      headers,
+      json: true,
+      encoding: null,
+    });
+    const _this = this;
+    await new Promise((resolve, reject) => {
+      zlib.unzip(res, function (err, result) {
+        if (err) {
+          _this.error();
+          reject(err);
+        } else {
+          const resJson = JSON.parse(result);
+          _this.success({ data: resJson });
+          if (resJson && resJson.aweme_list) {
+            const cleanData = resJson.aweme_list.map((item) => ({
+              author_user_id: String(item.author_user_id),
+              aweme_id: item.aweme_id,
+              city: item.city,
+              desc: item.desc,
+              create_time: item.create_time,
+              duration: item.duration,
+              statistics: {
+                [`${moment().format('YYYY-MM-DD-HH')}`]: item.statistics,
+              },
+            }));
+            resolve(cleanData);
+          } else {
+            _this.error();
+            reject(new Error());
+          }
+        }
+      });
+    }).then(async (cleanData) => {
+      // const createRes =
+      await this.ctx.service.dyVideo.batchCreate(cleanData);
+      // _this.success({ data: createRes });
+      Promise.resolve();
+    });
+  }
 
   // 获取热门视频列表并落库
   async getHotList() {
@@ -145,6 +147,208 @@ class DyUserController extends BaseController {
     const list = await this.ctx.service.dyVideo.query(params);
 
     this.success({ data: list });
+  }
+
+  async getBillboardDetail() {
+    // 请求接口
+    const billboard_types = [
+      3, // 体育
+      61, // 二次元
+      71, // 美食
+      81, // 剧情
+      86, // 搞笑
+      91, // 旅游
+      101, // 游戏
+      111, // 汽车
+    ];
+    const allResult = await Promise.all(
+      billboard_types.map((itemBillboardType) =>
+        rp({
+          uri: `https://creator.douyin.com/aweme/v1/creator/data/billboard/?billboard_type=${itemBillboardType}`,
+          json: true,
+          headers: {
+            cookie:
+              'passport_csrf_token_default=fe9d1b870b947a1d03b7627106b7441b; passport_csrf_token=fe9d1b870b947a1d03b7627106b7441b; sso_auth_status=1bf40686aceb5ebd5d1f1660b554b8c5; sso_auth_status_ss=1bf40686aceb5ebd5d1f1660b554b8c5; ttcid=49b0a565363c400fb9729b881fc3339929; csrf_token=pmzPVItSYMVBBtJvpTrZcfiuSGIUrLGh; n_mh=chjkcQtGu7Rlb3H90XmMN8_XX_UIUrrIGKl0uKpkgAE; sso_uid_tt=1bcb6a91ae8f2cac93e78839e5807085; sso_uid_tt_ss=1bcb6a91ae8f2cac93e78839e5807085; toutiao_sso_user=472d54eb04422f02484cac2ec26e512f; toutiao_sso_user_ss=472d54eb04422f02484cac2ec26e512f; odin_tt=c142a7105bb6ddeca41fc0bbb22b5e253ff5420877f6f89a46214decbfe2bc8ffbf13de947933d1f2dc3d177f934b2ce; passport_auth_status_ss=70fc4b84e84adac4828ff3df7dfeb1d8%2Cea5596a63e8e22b619fe334700e84f5d; sid_guard=d3779dbeb35e39d2579d706be64dbfb5%7C1619276780%7C5183999%7CWed%2C+23-Jun-2021+15%3A06%3A19+GMT; uid_tt=91a074ca93b8672de34342eb4ae590b4; uid_tt_ss=91a074ca93b8672de34342eb4ae590b4; sid_tt=d3779dbeb35e39d2579d706be64dbfb5; sessionid=d3779dbeb35e39d2579d706be64dbfb5; sessionid_ss=d3779dbeb35e39d2579d706be64dbfb5; passport_auth_status=70fc4b84e84adac4828ff3df7dfeb1d8%2Cea5596a63e8e22b619fe334700e84f5d; oc_login_type=LOGIN_PERSON; s_v_web_id=knynb1ni_1hUILYoP_BINH_4Z4e_B5L0_NVzbb6rlzDcN; ttwid=1%7Cnl__vDcu1v0czwYNGTaKxgO9To4L5sxolaritEoZeYY%7C1619448825%7C294d7fcb1ffe74f22d6a6fcc5f43df4aa9c35952feaa3b08d40b1a805b87e445; MONITOR_WEB_ID=48e5959f-97cc-4c5d-972f-d9339cf7449e; tt_scid=.jOr.X1QSp6zN6mtMWWihIakb7nJh3ONxuJ7RLRaJBa-ux417ddvp.ZRUw6BMACj5a67',
+          },
+        })
+      )
+    );
+    let allBillboardData = [];
+    allResult
+      .filter(
+        (item) => item && item.billboard_data && item.billboard_data.length
+      )
+      .forEach(
+        (item) =>
+          (allBillboardData = allBillboardData.concat(item.billboard_data))
+      );
+
+    // const allResult = await rp({
+    //   uri: `https://creator.douyin.com/aweme/v1/creator/data/billboard/?billboard_type=${this.ctx.request.query.billboard_type}`,
+    //   json: true,
+    //   headers: {
+    //     cookie:
+    //       'passport_csrf_token_default=fe9d1b870b947a1d03b7627106b7441b; passport_csrf_token=fe9d1b870b947a1d03b7627106b7441b; sso_auth_status=1bf40686aceb5ebd5d1f1660b554b8c5; sso_auth_status_ss=1bf40686aceb5ebd5d1f1660b554b8c5; ttcid=49b0a565363c400fb9729b881fc3339929; csrf_token=pmzPVItSYMVBBtJvpTrZcfiuSGIUrLGh; n_mh=chjkcQtGu7Rlb3H90XmMN8_XX_UIUrrIGKl0uKpkgAE; sso_uid_tt=1bcb6a91ae8f2cac93e78839e5807085; sso_uid_tt_ss=1bcb6a91ae8f2cac93e78839e5807085; toutiao_sso_user=472d54eb04422f02484cac2ec26e512f; toutiao_sso_user_ss=472d54eb04422f02484cac2ec26e512f; odin_tt=c142a7105bb6ddeca41fc0bbb22b5e253ff5420877f6f89a46214decbfe2bc8ffbf13de947933d1f2dc3d177f934b2ce; passport_auth_status_ss=70fc4b84e84adac4828ff3df7dfeb1d8%2Cea5596a63e8e22b619fe334700e84f5d; sid_guard=d3779dbeb35e39d2579d706be64dbfb5%7C1619276780%7C5183999%7CWed%2C+23-Jun-2021+15%3A06%3A19+GMT; uid_tt=91a074ca93b8672de34342eb4ae590b4; uid_tt_ss=91a074ca93b8672de34342eb4ae590b4; sid_tt=d3779dbeb35e39d2579d706be64dbfb5; sessionid=d3779dbeb35e39d2579d706be64dbfb5; sessionid_ss=d3779dbeb35e39d2579d706be64dbfb5; passport_auth_status=70fc4b84e84adac4828ff3df7dfeb1d8%2Cea5596a63e8e22b619fe334700e84f5d; oc_login_type=LOGIN_PERSON; s_v_web_id=knynb1ni_1hUILYoP_BINH_4Z4e_B5L0_NVzbb6rlzDcN; ttwid=1%7Cnl__vDcu1v0czwYNGTaKxgO9To4L5sxolaritEoZeYY%7C1619448825%7C294d7fcb1ffe74f22d6a6fcc5f43df4aa9c35952feaa3b08d40b1a805b87e445; MONITOR_WEB_ID=48e5959f-97cc-4c5d-972f-d9339cf7449e; tt_scid=.jOr.X1QSp6zN6mtMWWihIakb7nJh3ONxuJ7RLRaJBa-ux417ddvp.ZRUw6BMACj5a67',
+    //   },
+    // });
+    // const allBillboardData = (allResult && allResult.billboard_data) || [];
+
+    const now = moment().format('YYYY-MM-DD_HH');
+    const allVideos = await this.ctx.service.dyVideo.getAllVideos();
+    const existsVids = allVideos.map((item) => item.vid);
+    const vids = [];
+
+    const allUsers = await this.ctx.service.dyUser.getAllUsers();
+    const existsUids = allUsers.map((item) => item.sec_uid);
+    const uids = [];
+
+    allBillboardData.forEach((itemRank) => {
+      const { extra_list = [], link: author_share_url } = itemRank;
+      // 用户加密uid
+      const sec_uid =
+        (author_share_url.split('?')[1] &&
+          getUrlParams(author_share_url.split('?')[1]).sec_uid) ||
+        '';
+      // 防重复
+      if (!existsUids.includes(sec_uid)) {
+        existsUids.push(sec_uid);
+        uids.push(sec_uid);
+      }
+
+      if (extra_list && extra_list.length) {
+        extra_list.forEach((itemVideo) => {
+          const vid = itemVideo.link.split('/')[5] || '';
+          // 防重复
+          if (!existsVids.includes(vid)) {
+            existsVids.push(vid);
+            vids.push(vid);
+          }
+        });
+      }
+    });
+
+    this.success({ data: `视频 ${vids.length} 个, 账号 ${uids.length} 个` });
+
+    this.handleVideoData(vids, now);
+
+    this.handleUserData(uids, now);
+  }
+
+  async handleVideoData(vids, now) {
+    const _this = this;
+
+    // 开始分批请求数据，先请求
+    async function inTurnToBatchVideos(_vids) {
+      const inTurnVideos = _vids.splice(0, 20);
+      const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=${inTurnVideos.join(
+        ','
+      )}`;
+      const videosDetail = await rp({
+        uri: inTurnsApi,
+        json: true,
+      });
+      const packageItemVideos = [];
+      if (
+        videosDetail &&
+        videosDetail.item_list &&
+        videosDetail.item_list.length
+      ) {
+        const videosDetailList = videosDetail.item_list;
+        videosDetailList.forEach((itemDetail) => {
+          inTurnVideos.forEach((originItemVid) => {
+            if (originItemVid === itemDetail.aweme_id) {
+              packageItemVideos.push({
+                link: itemDetail.share_url,
+                title: itemDetail.desc,
+                tag:
+                  itemDetail.text_extra &&
+                  itemDetail.text_extra
+                    .map((itemTag) => itemTag.hashtag_name)
+                    .filter((item) => item !== ''),
+                vid: originItemVid,
+                sec_uid: itemDetail.author_user_id,
+                duration: itemDetail.duration,
+                create_time: itemDetail.create_time,
+                city: itemDetail.city || '',
+                statistics: [
+                  itemDetail.statistics
+                    ? {
+                        [`${now}`]: itemDetail.statistics,
+                      }
+                    : null,
+                ].filter((item) => item),
+              });
+            }
+          });
+        });
+      }
+      // 落库
+      if (packageItemVideos.length) {
+        console.log(`落库视频${packageItemVideos.length}条`);
+        await _this.ctx.service.dyVideo.batchCreate(packageItemVideos);
+      } else {
+        console.log('视频落库完成');
+      }
+
+      if (_vids.length) {
+        inTurnToBatchVideos(_vids);
+      }
+    }
+
+    inTurnToBatchVideos(vids);
+  }
+
+  async handleUserData(uids, now) {
+    const _this = this;
+    async function inTurnToBatchUser(_uids) {
+      const inTurnUid = _uids.shift();
+      const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/user/info/?sec_uid=${inTurnUid}`;
+      const userDetailRes = await rp({
+        uri: inTurnsApi,
+        json: true,
+      });
+
+      if (
+        userDetailRes &&
+        userDetailRes.user_info &&
+        userDetailRes.user_info.uid
+      ) {
+        const userInfo = userDetailRes.user_info;
+        const userDetail = {
+          author_thumb:
+            userInfo.avatar_thumb &&
+            userInfo.avatar_thumb.url_list &&
+            userInfo.avatar_thumb.url_list.length &&
+            userInfo.avatar_thumb.url_list[0],
+          sec_uid: inTurnUid,
+          author_name: userInfo.nickname,
+          signature: userInfo.signature,
+          region: userInfo.region,
+          statistics: [
+            {
+              [`${now}`]: {
+                favoriting_count: userInfo.favoriting_count,
+                original_musician: userInfo.original_musician,
+                aweme_count: userInfo.aweme_count,
+                following_count: userInfo.following_count,
+                total_favorited: userInfo.total_favorited,
+                follower_count: userInfo.follower_count,
+              },
+            },
+          ],
+        };
+        console.log(`账号 ${inTurnUid} 落库`);
+        await _this.ctx.service.dyUser.create(userDetail);
+      }
+
+      if (_uids.length) {
+        inTurnToBatchUser(_uids);
+      } else {
+        console.log('账号落库完成');
+      }
+    }
+
+    inTurnToBatchUser(uids);
   }
 }
 
