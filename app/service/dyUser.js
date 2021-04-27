@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-26 23:41:05
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 17:31:45
+ * @LastEditTime: 2021-04-27 20:52:59
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -21,6 +21,19 @@ class DyUserService extends BaseService {
 
   async getAllUsers() {
     return await this.ctx.model.DyUser.find({});
+  }
+
+  async updateUserStatistics({ sec_uid, ...rest }) {
+    const condition = { sec_uid };
+    const $addToSet = { ...rest };
+    const options = { upsert: false };
+    const updateRes = await this.ctx.model.DyUser.updateOne(
+      condition,
+      { $addToSet },
+      options
+    );
+
+    return updateRes;
   }
 
   async batchUpdateStatistics(newUsersStatistics) {
@@ -46,7 +59,6 @@ class DyUserService extends BaseService {
     this.ctx.logger.warn('执行账号更新');
     const allUsers = await this.getAllUsers();
     const uids = allUsers.map((item) => item.sec_uid);
-    const newStatisticsUsers = [];
     const now = moment().format('YYYY-MM-DD_HH');
     const _this = this;
 
@@ -69,7 +81,14 @@ class DyUserService extends BaseService {
           statistics: {
             [`${now}`]: {
               favoriting_count: userInfo.favoriting_count,
-              original_musician: userInfo.original_musician,
+              original_music_count:
+                (userInfo.original_musician &&
+                  userInfo.original_musician.music_count) ||
+                0,
+              original_music_used_count:
+                (userInfo.original_musician &&
+                  userInfo.original_musician.music_used_count) ||
+                0,
               aweme_count: userInfo.aweme_count,
               following_count: userInfo.following_count,
               total_favorited: userInfo.total_favorited,
@@ -77,8 +96,10 @@ class DyUserService extends BaseService {
             },
           },
         };
-        _this.ctx.logger.warn(`更新账号${inTurnUid}`);
-        newStatisticsUsers.push(userDetail);
+        _this.ctx.logger.warn(
+          `更新账号${userInfo.uid}，剩余${_uids.length}个账号`
+        );
+        await _this.updateUserStatistics(userDetail);
       }
 
       if (_uids.length) {
@@ -89,8 +110,6 @@ class DyUserService extends BaseService {
     }
 
     await inTurnToBatchUser(uids);
-
-    await this.batchUpdateStatistics(newStatisticsUsers);
   }
 
   async query(params = {}) {
@@ -98,7 +117,7 @@ class DyUserService extends BaseService {
       params,
       options: {
         model: this.ctx.model.DyUser,
-        searchParams: ['author_name', 'sec_uid', 'category'],
+        searchParams: ['author_name', 'sec_uid', 'category', 'uid'],
         fuzzySearchParams: ['author_name'], // 支持模糊搜索的字段名
         timeRangeParams: [],
         select: '-_id',

@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 17:29:07
+ * @LastEditTime: 2021-04-27 20:57:26
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -303,7 +303,9 @@ class DyUserController extends BaseController {
       }
       // 落库
       if (packageItemVideos.length) {
-        _this.ctx.logger.warn(`落库视频${packageItemVideos.length}条`);
+        _this.ctx.logger.warn(
+          `落库视频 ${packageItemVideos.length} 条，还剩 ${_grabVideos.length} 条`
+        );
         await _this.ctx.service.dyVideo.batchCreate(packageItemVideos);
       }
 
@@ -335,13 +337,21 @@ class DyUserController extends BaseController {
         const userInfo = userDetailRes.user_info;
         const userDetail = {
           ...inTurnUser,
+          uid: userInfo.uid,
           signature: userInfo.signature,
           region: userInfo.region,
           statistics: [
             {
               [`${now}`]: {
                 favoriting_count: userInfo.favoriting_count,
-                original_musician: userInfo.original_musician,
+                original_music_count:
+                  (userInfo.original_musician &&
+                    userInfo.original_musician.music_count) ||
+                  0,
+                original_music_used_count:
+                  (userInfo.original_musician &&
+                    userInfo.original_musician.music_used_count) ||
+                  0,
                 aweme_count: userInfo.aweme_count,
                 following_count: userInfo.following_count,
                 total_favorited: userInfo.total_favorited,
@@ -350,7 +360,9 @@ class DyUserController extends BaseController {
             },
           ],
         };
-        _this.ctx.logger.warn(`账号 ${inTurnUser.sec_uid} 落库`);
+        _this.ctx.logger.warn(
+          `账号 ${inTurnUser.sec_uid} 落库, 还剩 ${_grabUsers.length} 个`
+        );
         await _this.ctx.service.dyUser.create(userDetail);
       }
 

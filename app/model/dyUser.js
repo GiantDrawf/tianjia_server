@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-26 22:43:13
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 16:51:44
+ * @LastEditTime: 2021-04-27 20:53:44
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -13,6 +13,7 @@ module.exports = function (app) {
 
   const DyUserSchema = new Schema(
     {
+      uid: { type: String }, // uid
       sec_uid: { type: String }, // 用户加密id
       link: { type: String }, // 用户主页分享链接
       author_name: { type: String }, // 昵称
@@ -25,7 +26,7 @@ module.exports = function (app) {
     { versionKey: false }
   );
 
-  DyUserSchema.index({ sec_uid: 1 }, { unique: true });
+  DyUserSchema.index({ uid: 1 }, { unique: true });
 
   return mongoose.model('DyUser', DyUserSchema, 'dyUser');
 };

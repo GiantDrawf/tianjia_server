@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:18:31
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 17:31:16
+ * @LastEditTime: 2021-04-27 20:51:55
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -71,8 +71,8 @@ class DyVideoService extends BaseService {
   async updateAllVideos() {
     this.ctx.logger.warn('执行视频更新');
     const allVideos = await this.getAllVideos();
-    let newStatisticsVideos = [];
     const now = moment().format('YYYY-MM-DD_HH');
+    const _this = this;
 
     async function inTurnBatchVideos() {
       const inTurnVideos = allVideos.splice(0, 20);
@@ -99,16 +99,21 @@ class DyVideoService extends BaseService {
           });
         });
       }
-      newStatisticsVideos = newStatisticsVideos.concat(inTurnVideos);
+
+      _this.ctx.logger.warn(
+        `更新视频 ${inTurnVideos.length} 条， 剩余 ${allVideos.length} 条.`
+      );
+      // 落库
+      await _this.batchUpdateStatistics(inTurnVideos);
 
       if (allVideos.length) {
         await inTurnBatchVideos();
+      } else {
+        _this.ctx.logger.warn('所有视频的统计信息更新完成');
       }
     }
 
     await inTurnBatchVideos();
-
-    await this.batchUpdateStatistics(newStatisticsVideos);
   }
 }
 
