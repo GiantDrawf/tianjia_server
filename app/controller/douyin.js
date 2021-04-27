@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 13:06:16
+ * @LastEditTime: 2021-04-27 14:55:50
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -142,9 +142,16 @@ class DyUserController extends BaseController {
     inTurnBatchVideos();
   }
 
-  async query() {
+  async queryVideo() {
     const params = this.ctx.request.body;
     const list = await this.ctx.service.dyVideo.query(params);
+
+    this.success({ data: list });
+  }
+
+  async queryUser() {
+    const params = this.ctx.request.body;
+    const list = await this.ctx.service.dyUser.query(params);
 
     this.success({ data: list });
   }
@@ -286,12 +293,12 @@ class DyUserController extends BaseController {
       if (packageItemVideos.length) {
         console.log(`落库视频${packageItemVideos.length}条`);
         await _this.ctx.service.dyVideo.batchCreate(packageItemVideos);
-      } else {
-        console.log('视频落库完成');
       }
 
       if (_vids.length) {
         inTurnToBatchVideos(_vids);
+      } else {
+        console.log('视频落库完成');
       }
     }
 

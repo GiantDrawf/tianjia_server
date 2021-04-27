@@ -215,21 +215,29 @@ module.exports = (app) => {
     controller.checkIn.getAllNum
   );
 
-  // 获取抖音推荐视频
-  // router.get(
-  //   '/douyin/getRecommendedAweme',
-  //   controller.douyin.getRecommendedAweme
-  // );
-
-  // 获取抖音热榜所有视频
-  // router.get('/douyin/getHotList', jwt, admin, controller.douyin.getHotList);
+  /**
+   * 分页查询
+   */
+  router.post(
+    '/platform/douyin/video/query',
+    jwt,
+    admin,
+    controller.douyin.queryVideo
+  );
 
   /**
    * 分页查询
    */
-  router.post('/platform/douyin/query', jwt, admin, controller.douyin.query);
+  router.post(
+    '/platform/douyin/user/query',
+    jwt,
+    admin,
+    controller.douyin.queryUser
+  );
 
-  // 获取分类榜单所有视频及账号信息
+  /**
+   * 获取分类榜单所有视频及账号信息
+   */
   router.get(
     '/douyin/getAllBillboard',
     jwt,

@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-26 23:41:05
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 13:39:14
+ * @LastEditTime: 2021-04-27 14:02:53
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -89,9 +89,23 @@ class DyUserService extends BaseService {
 
     await inTurnToBatchUser(uids);
 
-    console.log(JSON.stringify(newStatisticsUsers));
-
     await this.batchUpdateStatistics(newStatisticsUsers);
+  }
+
+  async query(params = {}) {
+    const res = await this.commonQuery({
+      params,
+      options: {
+        model: this.ctx.model.DyUser,
+        searchParams: ['author_name', 'sec_uid'],
+        fuzzySearchParams: ['author_name'], // 支持模糊搜索的字段名
+        timeRangeParams: [],
+        select: '-_id',
+        sort: params.sort || {},
+      },
+    });
+
+    return res;
   }
 }
 
