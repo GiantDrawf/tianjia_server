@@ -10,11 +10,15 @@ module.exports = (app) => {
 
   // 管理员权限
   const admin = role.can('admin');
+  // 天佳内容运营
+  const tianjiaOperation = role.can('tianjiaOperation');
+  // 抖音数据分析管理员
+  const douyinManager = role.can('douyinManager');
 
   /**
-   * 后台接口
+   * 后台服务器状态接口
    */
-  router.get('/platform/performance', jwt, admin, controller.os.performance);
+  router.get('/platform/performance', controller.os.performance);
 
   // 登录接口
   router.post('/platform/user/login', controller.user.login);
@@ -60,7 +64,12 @@ module.exports = (app) => {
    * 删除消息
    * @role admin
    */
-  router.post('/platform/msg/delete', jwt, admin, controller.message.delete);
+  router.post(
+    '/platform/msg/delete',
+    jwt,
+    tianjiaOperation,
+    controller.message.delete
+  );
 
   /**
    * 查询消息列表
@@ -81,7 +90,7 @@ module.exports = (app) => {
   router.post(
     '/platform/msg/replayMsg',
     jwt,
-    admin,
+    tianjiaOperation,
     controller.message.replayMsg
   );
 
@@ -91,7 +100,7 @@ module.exports = (app) => {
   router.post(
     '/platform/msg/changeMsgShow',
     jwt,
-    admin,
+    tianjiaOperation,
     controller.message.changeMsgShow
   );
 
@@ -101,14 +110,19 @@ module.exports = (app) => {
   router.get(
     '/platform/msg/readMsg',
     jwt,
-    admin,
+    tianjiaOperation,
     controller.message.changeMsgRead
   );
 
   /**
    * 上传文件接口
    */
-  router.post('/platform/upload', jwt, admin, controller.file.upload);
+  router.post(
+    '/platform/upload',
+    jwt,
+    tianjiaOperation,
+    controller.file.upload
+  );
 
   /**
    * 本地化图片接口
@@ -116,7 +130,7 @@ module.exports = (app) => {
   router.post(
     '/platform/localizeImgs',
     jwt,
-    admin,
+    tianjiaOperation,
     controller.file.localizeImgs
   );
 
@@ -126,14 +140,19 @@ module.exports = (app) => {
   router.post(
     '/platform/article/create',
     jwt,
-    admin,
+    tianjiaOperation,
     controller.article.create
   );
 
   /**
    * 删除文章
    */
-  router.get('/platform/article/delete', jwt, admin, controller.article.delete);
+  router.get(
+    '/platform/article/delete',
+    jwt,
+    tianjiaOperation,
+    controller.article.delete
+  );
 
   /**
    * 更改文章
@@ -141,14 +160,19 @@ module.exports = (app) => {
   router.post(
     '/platform/article/update',
     jwt,
-    admin,
+    tianjiaOperation,
     controller.article.update
   );
 
   /**
-   * 分页查询
+   * 文章分页查询
    */
-  router.post('/platform/article/query', jwt, admin, controller.article.query);
+  router.post(
+    '/platform/article/query',
+    jwt,
+    tianjiaOperation,
+    controller.article.query
+  );
 
   /**
    * 获取单篇详情
@@ -161,29 +185,49 @@ module.exports = (app) => {
   router.post(
     '/platform/article/batchQuery',
     jwt,
-    admin,
+    tianjiaOperation,
     controller.article.batchQuery
   );
 
   /**
    * 新建模块
    */
-  router.post('/platform/module/create', jwt, admin, controller.module.create);
+  router.post(
+    '/platform/module/create',
+    jwt,
+    tianjiaOperation,
+    controller.module.create
+  );
 
   /**
    * 删除模块
    */
-  router.get('/platform/module/delete', jwt, admin, controller.module.delete);
+  router.get(
+    '/platform/module/delete',
+    jwt,
+    tianjiaOperation,
+    controller.module.delete
+  );
 
   /**
    * 更改模块信息
    */
-  router.post('/platform/module/update', jwt, admin, controller.module.update);
+  router.post(
+    '/platform/module/update',
+    jwt,
+    tianjiaOperation,
+    controller.module.update
+  );
 
   /**
-   * 分页查询
+   * 分页查询模块
    */
-  router.post('/platform/module/query', jwt, admin, controller.module.query);
+  router.post(
+    '/platform/module/query',
+    jwt,
+    tianjiaOperation,
+    controller.module.query
+  );
 
   /**
    * 获取单个模块详情
@@ -216,22 +260,22 @@ module.exports = (app) => {
   );
 
   /**
-   * 分页查询
+   * 分页查询抖音视频数据
    */
   router.post(
     '/platform/douyin/video/query',
     jwt,
-    admin,
+    douyinManager,
     controller.douyin.queryVideo
   );
 
   /**
-   * 分页查询
+   * 分页查询抖音账号数据
    */
   router.post(
     '/platform/douyin/user/query',
     jwt,
-    admin,
+    douyinManager,
     controller.douyin.queryUser
   );
 
@@ -241,7 +285,17 @@ module.exports = (app) => {
   router.get(
     '/douyin/getAllBillboard',
     jwt,
-    admin,
+    douyinManager,
     controller.douyin.getBillboardDetail
+  );
+
+  /**
+   * 离线下载所有视频数据
+   */
+  router.get(
+    '/douyin/downloadVideosOffline',
+    jwt,
+    douyinManager,
+    controller.douyin.downloadVideosOffline
   );
 };

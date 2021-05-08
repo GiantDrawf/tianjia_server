@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:58:35
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-26 22:38:27
+ * @LastEditTime: 2021-05-08 18:01:18
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -86,8 +86,46 @@ const getUrlParams = (queryStr) => {
   return result;
 };
 
+const formatDuration = (time) => {
+  let formatTime = '';
+  if (time > -1) {
+    const hour = Math.floor(time / 3600);
+    const min = Math.floor(time / 60) % 60;
+    const sec = time % 60;
+    if (hour < 10) {
+      formatTime = `0${hour}:`;
+    } else {
+      formatTime = `${hour}:`;
+    }
+
+    if (min < 10) {
+      formatTime += '0';
+    }
+    formatTime += `${min}:`;
+
+    if (sec < 10) {
+      formatTime += '0';
+    }
+    formatTime += sec;
+  }
+  return formatTime;
+};
+
+const billboardTypesMap = {
+  3: '体育',
+  61: '二次元',
+  71: '美食',
+  81: '剧情',
+  86: '搞笑',
+  91: '旅游',
+  101: '游戏',
+  111: '汽车',
+};
+
 module.exports = {
   constructRecommendedListParams,
   constructHearders,
   getUrlParams,
+  formatDuration,
+  billboardTypesMap,
 };

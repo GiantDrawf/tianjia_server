@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 20:57:26
+ * @LastEditTime: 2021-05-08 18:50:14
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -12,10 +12,15 @@ const BaseController = require('./BaseController');
 const rp = require('request-promise');
 const moment = require('moment');
 const zlib = require('zlib');
+const xlsx = require('node-xlsx');
+const fs = require('fs');
+const path = require('path');
 const {
   constructRecommendedListParams,
   constructHearders,
   getUrlParams,
+  formatDuration,
+  billboardTypesMap,
 } = require('../public/douyinUtils');
 
 class DyUserController extends BaseController {
@@ -374,6 +379,125 @@ class DyUserController extends BaseController {
     }
 
     inTurnToBatchUser(grabUsers);
+  }
+
+  async downloadVideosOffline() {
+    const allVideosLength = await this.ctx.model.DyVideo.estimatedDocumentCount();
+
+    this.success({
+      msg: `离线下载已开始，共 ${allVideosLength} 条视频，请耐心等待`,
+    });
+
+    const pageSize = 200;
+    let batchTimes = Math.ceil(allVideosLength / pageSize);
+    const _this = this;
+    const fillArray = new Array(8).fill('-');
+
+    function mkdirsSync(dirname) {
+      if (fs.existsSync(dirname)) {
+        return true;
+      } else if (mkdirsSync(path.dirname(dirname))) {
+        fs.mkdirSync(dirname);
+        return true;
+      }
+    }
+
+    async function inBatchDownload(pageNum) {
+      const batchVideosRes = await _this.ctx.service.dyVideo.query({
+        query: {},
+        pagination: { page: pageNum, pageSize },
+      });
+      // 处理每条视频数据
+      const videoList = batchVideosRes.list || [];
+      const xlsxData = videoList
+        .map((itemVideo, index) => {
+          const itemSheetData = [
+            [
+              '统计时间',
+              '评论数',
+              '点赞数',
+              '播放量',
+              '分享量',
+              '标题',
+              'vid',
+              '作者',
+              '背景音乐作者',
+              'uid',
+              '时长',
+              '分类',
+              '创建时间',
+            ],
+          ];
+          if (
+            itemVideo &&
+            itemVideo.statistics &&
+            itemVideo.statistics.length
+          ) {
+            const videoSelfData = [
+              itemVideo.title || '-',
+              itemVideo.vid || '-',
+              itemVideo.author || '-',
+              itemVideo.music_author || '-',
+              itemVideo.uid || '-',
+              (itemVideo.duration && formatDuration(itemVideo.duration)) || 0,
+              (itemVideo.category && billboardTypesMap[itemVideo.category]) ||
+                '-',
+              (itemVideo.create_time &&
+                moment(itemVideo.create_time * 1000).format(
+                  'YYYY-MM-DD HH:mm:ss'
+                )) ||
+                '-',
+            ];
+            itemVideo.statistics.forEach((itemStatistics, statisticsIndex) => {
+              const hourKey = Object.keys(itemStatistics)[0] || '';
+              const statisticsData = [
+                moment(hourKey.replace('_', ' ')).format('YYYY-MM-DD HH:mm:ss'),
+                itemStatistics[hourKey].comment_count || 0,
+                itemStatistics[hourKey].digg_count || 0,
+                itemStatistics[hourKey].play_count || 0,
+                itemStatistics[hourKey].share_count || 0,
+              ];
+
+              itemSheetData.push(
+                statisticsIndex === 0
+                  ? statisticsData.concat(videoSelfData)
+                  : statisticsData.concat(fillArray)
+              );
+            });
+
+            return {
+              name: `sheet${index + 1}`,
+              data: itemSheetData,
+            };
+          }
+
+          return null;
+        })
+        .filter((item) => !!item);
+      const buffer = xlsx.build(xlsxData);
+      // 生成写入路径
+      const filename = `${(pageNum - 1) * pageSize + 1}-${
+        pageNum * pageSize <= allVideosLength
+          ? pageNum * pageSize
+          : allVideosLength
+      }`;
+      const target = path.join(
+        _this.app.config.douyinDataStore,
+        'video',
+        `${filename}.xlsx`
+      );
+      mkdirsSync(path.join(_this.app.config.douyinDataStore, 'video'));
+      fs.writeFileSync(target, buffer, { flag: 'w' });
+      _this.ctx.logger.info(`${filename} 视频数据离线下载完成`);
+      if (batchTimes > 1) {
+        batchTimes -= 1;
+        await inBatchDownload(pageNum + 1);
+      } else {
+        _this.ctx.logger.warn('全部视频数据离线下载完成');
+      }
+    }
+
+    inBatchDownload(1);
   }
 }
 
