@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-08 18:50:14
+ * @LastEditTime: 2021-05-09 22:50:37
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -390,6 +390,7 @@ class DyUserController extends BaseController {
 
     const pageSize = 200;
     let batchTimes = Math.ceil(allVideosLength / pageSize);
+    this.ctx.logger.info(`总共${batchTimes}个文件`);
     const _this = this;
     const fillArray = new Array(8).fill('-');
 
@@ -403,6 +404,7 @@ class DyUserController extends BaseController {
     }
 
     async function inBatchDownload(pageNum) {
+      _this.ctx.logger.info(`开始第${pageNum}个`);
       const batchVideosRes = await _this.ctx.service.dyVideo.query({
         query: {},
         pagination: { page: pageNum, pageSize },
@@ -491,9 +493,122 @@ class DyUserController extends BaseController {
       _this.ctx.logger.info(`${filename} 视频数据离线下载完成`);
       if (batchTimes > 1) {
         batchTimes -= 1;
-        await inBatchDownload(pageNum + 1);
+        inBatchDownload(pageNum + 1);
       } else {
         _this.ctx.logger.warn('全部视频数据离线下载完成');
+      }
+    }
+
+    inBatchDownload(1);
+  }
+
+  async downloadUsersOffline() {
+    const allUsersLength = await this.ctx.model.DyUser.estimatedDocumentCount();
+
+    this.success({
+      msg: `离线下载已开始，共 ${allUsersLength} 个账户，请耐心等待`,
+    });
+
+    const pageSize = 200;
+    let batchTimes = Math.ceil(allUsersLength / pageSize);
+    this.ctx.logger.info(`总共${batchTimes}个文件`);
+    const _this = this;
+    const fillArray = new Array(5).fill('-');
+
+    function mkdirsSync(dirname) {
+      if (fs.existsSync(dirname)) {
+        return true;
+      } else if (mkdirsSync(path.dirname(dirname))) {
+        fs.mkdirSync(dirname);
+        return true;
+      }
+    }
+
+    async function inBatchDownload(pageNum) {
+      _this.ctx.logger.info(`开始第${pageNum}个`);
+      const batchUsersRes = await _this.ctx.service.dyUser.query({
+        query: {},
+        pagination: { page: pageNum, pageSize },
+      });
+      // 处理每个账号数据
+      const userList = batchUsersRes.list || [];
+      const xlsxData = userList
+        .map((itemUser, index) => {
+          const itemSheetData = [
+            [
+              '统计时间',
+              '喜欢作品数',
+              '原创BGM数',
+              '原创BGM使用数',
+              '作品数',
+              '关注数',
+              '赞',
+              '粉丝数',
+              '昵称',
+              '分类',
+              'uid',
+              '简介',
+              '国籍',
+            ],
+          ];
+          if (itemUser && itemUser.statistics && itemUser.statistics.length) {
+            const userSelfData = [
+              itemUser.author_name || '-',
+              (itemUser.category && billboardTypesMap[itemUser.category]) ||
+                '-',
+              itemUser.uid || '-',
+              itemUser.signature || '-',
+              itemUser.region || '-',
+            ];
+            itemUser.statistics.forEach((itemStatistics, statisticsIndex) => {
+              const hourKey = Object.keys(itemStatistics)[0] || '';
+              const statisticsData = [
+                moment(hourKey.replace('_', ' ')).format('YYYY-MM-DD HH:mm:ss'),
+                itemStatistics[hourKey].favoriting_count || 0,
+                itemStatistics[hourKey].original_music_count || 0,
+                itemStatistics[hourKey].original_music_used_count || 0,
+                itemStatistics[hourKey].aweme_count || 0,
+                itemStatistics[hourKey].following_count || 0,
+                itemStatistics[hourKey].total_favorited || 0,
+                itemStatistics[hourKey].follower_count || 0,
+              ];
+
+              itemSheetData.push(
+                statisticsIndex === 0
+                  ? statisticsData.concat(userSelfData)
+                  : statisticsData.concat(fillArray)
+              );
+            });
+
+            return {
+              name: `sheet${index + 1}`,
+              data: itemSheetData,
+            };
+          }
+
+          return null;
+        })
+        .filter((item) => !!item);
+      const buffer = xlsx.build(xlsxData);
+      // 生成写入路径
+      const filename = `${(pageNum - 1) * pageSize + 1}-${
+        pageNum * pageSize <= allUsersLength
+          ? pageNum * pageSize
+          : allUsersLength
+      }`;
+      const target = path.join(
+        _this.app.config.douyinDataStore,
+        'user',
+        `${filename}.xlsx`
+      );
+      mkdirsSync(path.join(_this.app.config.douyinDataStore, 'user'));
+      fs.writeFileSync(target, buffer, { flag: 'w' });
+      _this.ctx.logger.info(`${filename} 账号数据离线下载完成`);
+      if (batchTimes > 1) {
+        batchTimes -= 1;
+        inBatchDownload(pageNum + 1);
+      } else {
+        _this.ctx.logger.warn('全部账号数据离线下载完成');
       }
     }
 

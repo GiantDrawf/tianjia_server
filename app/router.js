@@ -298,4 +298,14 @@ module.exports = (app) => {
     douyinManager,
     controller.douyin.downloadVideosOffline
   );
+
+  /**
+   * 离线下载所有账号数据
+   */
+  router.get(
+    '/douyin/downloadUsersOffline',
+    jwt,
+    douyinManager,
+    controller.douyin.downloadUsersOffline
+  );
 };
