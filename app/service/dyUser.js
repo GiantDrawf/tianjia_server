@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-26 23:41:05
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 20:52:59
+ * @LastEditTime: 2021-05-13 00:11:16
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -57,59 +57,65 @@ class DyUserService extends BaseService {
   // 更新所有视频的统计信息
   async updateAllUsers() {
     this.ctx.logger.warn('执行账号更新');
-    const allUsers = await this.getAllUsers();
-    const uids = allUsers.map((item) => item.sec_uid);
+    const allUsersLength = await this.ctx.model.DyUser.estimatedDocumentCount();
     const now = moment().format('YYYY-MM-DD_HH');
     const _this = this;
 
-    async function inTurnToBatchUser(_uids) {
-      const inTurnUid = _uids.shift();
-      const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/user/info/?sec_uid=${inTurnUid}`;
-      const userDetailRes = await rp({
-        uri: inTurnsApi,
-        json: true,
+    async function inTurnToBatchUser(page) {
+      const inTurnUserRes = await _this.ctx.service.dyUser.query({
+        query: {},
+        pagination: { page, pageSize: 1 },
       });
+      const inTurnUser = inTurnUserRes.list || [];
+      const inTurnUid = (inTurnUser[0] && inTurnUser[0].sec_uid) || '';
+      if (inTurnUid) {
+        const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/user/info/?sec_uid=${inTurnUid}`;
+        const userDetailRes = await rp({
+          uri: inTurnsApi,
+          json: true,
+        });
 
-      if (
-        userDetailRes &&
-        userDetailRes.user_info &&
-        userDetailRes.user_info.uid
-      ) {
-        const userInfo = userDetailRes.user_info;
-        const userDetail = {
-          sec_uid: inTurnUid,
-          statistics: {
-            [`${now}`]: {
-              favoriting_count: userInfo.favoriting_count,
-              original_music_count:
-                (userInfo.original_musician &&
-                  userInfo.original_musician.music_count) ||
-                0,
-              original_music_used_count:
-                (userInfo.original_musician &&
-                  userInfo.original_musician.music_used_count) ||
-                0,
-              aweme_count: userInfo.aweme_count,
-              following_count: userInfo.following_count,
-              total_favorited: userInfo.total_favorited,
-              follower_count: userInfo.follower_count,
+        if (
+          userDetailRes &&
+          userDetailRes.user_info &&
+          userDetailRes.user_info.uid
+        ) {
+          const userInfo = userDetailRes.user_info;
+          const userDetail = {
+            sec_uid: inTurnUid,
+            statistics: {
+              [`${now}`]: {
+                favoriting_count: userInfo.favoriting_count,
+                original_music_count:
+                  (userInfo.original_musician &&
+                    userInfo.original_musician.music_count) ||
+                  0,
+                original_music_used_count:
+                  (userInfo.original_musician &&
+                    userInfo.original_musician.music_used_count) ||
+                  0,
+                aweme_count: userInfo.aweme_count,
+                following_count: userInfo.following_count,
+                total_favorited: userInfo.total_favorited,
+                follower_count: userInfo.follower_count,
+              },
             },
-          },
-        };
-        _this.ctx.logger.warn(
-          `更新账号${userInfo.uid}，剩余${_uids.length}个账号`
-        );
-        await _this.updateUserStatistics(userDetail);
+          };
+          _this.ctx.logger.warn(
+            `更新账号${userInfo.uid}，剩余${allUsersLength - page}个账号`
+          );
+          await _this.updateUserStatistics(userDetail);
+        }
       }
 
-      if (_uids.length) {
-        await inTurnToBatchUser(_uids);
+      if (page < allUsersLength) {
+        await inTurnToBatchUser(page + 1);
       } else {
         _this.ctx.logger.warn('账号统计信息更新完成');
       }
     }
 
-    await inTurnToBatchUser(uids);
+    await inTurnToBatchUser(1);
   }
 
   async query(params = {}) {

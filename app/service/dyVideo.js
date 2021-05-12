@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:18:31
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-12 16:44:49
+ * @LastEditTime: 2021-05-13 00:08:43
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -70,12 +70,19 @@ class DyVideoService extends BaseService {
   // 更新所有视频的统计信息
   async updateAllVideos() {
     this.ctx.logger.warn('执行视频更新');
-    const allVideos = await this.getAllVideos();
+    const allVideosLength =
+      await this.ctx.model.DyVideo.estimatedDocumentCount();
+    const pageSize = 20;
+    const batchTimes = Math.ceil(allVideosLength / pageSize);
     const now = moment().format('YYYY-MM-DD_HH');
     const _this = this;
 
-    async function inTurnBatchVideos() {
-      const inTurnVideos = allVideos.splice(0, 20);
+    async function inTurnBatchVideos(page) {
+      const batchVideosRes = await _this.ctx.service.dyVideo.query({
+        query: {},
+        pagination: { page, pageSize },
+      });
+      const inTurnVideos = batchVideosRes.list || [];
       const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=${inTurnVideos
         .map((item) => item.vid)
         .join(',')}`;
@@ -101,19 +108,21 @@ class DyVideoService extends BaseService {
       }
 
       _this.ctx.logger.warn(
-        `更新视频 ${inTurnVideos.length} 条， 剩余 ${allVideos.length} 条.`
+        `更新视频 ${(page - 1) * 20}-${page * 20} 条， 剩余 ${
+          allVideosLength - page * 20 >= 0 ? allVideosLength - page * 20 : 0
+        } 条.`
       );
       // 落库
       await _this.batchUpdateStatistics(inTurnVideos);
 
-      if (allVideos.length) {
-        await inTurnBatchVideos();
+      if (page < batchTimes) {
+        await inTurnBatchVideos(page + 1);
       } else {
         _this.ctx.logger.warn('所有视频的统计信息更新完成');
       }
     }
 
-    await inTurnBatchVideos();
+    await inTurnBatchVideos(1);
   }
 
   async updateDyVideo({ vid, ...rest }) {
