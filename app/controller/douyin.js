@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-12 17:48:28
+ * @LastEditTime: 2021-05-12 18:52:18
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -618,11 +618,11 @@ class DyUserController extends BaseController {
 
   async inBatchGetComments() {
     // 设置锁
-    if (this.ctx.session.lockInBatchGetVC) {
-      this.error({ msg: '离线任务进行中，请不要重复请求' });
+    if (this.app.lockInBatchGetVC) {
+      this.error({ msg: '离线任务进行中，请不要重复请求，请耐心等待' });
       return;
     }
-    this.ctx.session.lockInBatchGetVC = true;
+    this.app.lockInBatchGetVC = true;
     let allVideosLength = await this.ctx.model.DyVideo.estimatedDocumentCount();
 
     this.success({
@@ -704,28 +704,27 @@ class DyUserController extends BaseController {
         null;
       if (batchVideoItem && batchVideoItem.vid) {
         const { vid } = batchVideoItem;
-        _this.ctx.logger.warn(`开始请求视频 ${vid} 的评论.`);
+        _this.ctx.logger.warn(`第 ${vIndex} 个 开始请求视频 ${vid} 的评论.`);
         const pureComments = await getCommentsInPages(vid, 0, []);
 
         await _this.ctx.service.dyVideo.updateDyVideo({
           vid,
           comments: pureComments,
         });
-        _this.ctx.logger.warn(`视频 ${vid} 的评论更新完成.`);
       }
       if (allVideosLength > 1) {
         allVideosLength -= 1;
         inBatchGetVC(vIndex + 1);
       } else {
         // 解锁
-        _this.ctx.session.lockInBatchGetVC = false;
+        _this.app.lockInBatchGetVC = false;
         _this.ctx.logger.warn('全部视频的评论数据下载完成');
       }
     }
     try {
       inBatchGetVC(1);
     } catch (e) {
-      this.ctx.session.lockInBatchGetVC = false;
+      this.app.lockInBatchGetVC = false;
     }
   }
 }
