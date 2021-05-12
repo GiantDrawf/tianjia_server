@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-26 23:41:05
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-13 00:11:16
+ * @LastEditTime: 2021-05-13 00:20:54
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -62,11 +62,15 @@ class DyUserService extends BaseService {
     const _this = this;
 
     async function inTurnToBatchUser(page) {
-      const inTurnUserRes = await _this.ctx.service.dyUser.query({
-        query: {},
-        pagination: { page, pageSize: 1 },
-      });
-      const inTurnUser = inTurnUserRes.list || [];
+      const inTurnUserRes = await _this.ctx.model.DyUser.paginate(
+        {},
+        {
+          page,
+          limit: 1,
+          select: '-_id sec_uid',
+        }
+      );
+      const inTurnUser = (inTurnUserRes && inTurnUserRes.docs) || [];
       const inTurnUid = (inTurnUser[0] && inTurnUser[0].sec_uid) || '';
       if (inTurnUid) {
         const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/user/info/?sec_uid=${inTurnUid}`;

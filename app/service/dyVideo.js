@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:18:31
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-13 00:08:43
+ * @LastEditTime: 2021-05-13 00:19:46
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -78,11 +78,15 @@ class DyVideoService extends BaseService {
     const _this = this;
 
     async function inTurnBatchVideos(page) {
-      const batchVideosRes = await _this.ctx.service.dyVideo.query({
-        query: {},
-        pagination: { page, pageSize },
-      });
-      const inTurnVideos = batchVideosRes.list || [];
+      const batchVideosRes = await _this.ctx.model.DyVideo.paginate(
+        {},
+        {
+          page,
+          limit: 1,
+          select: '-_id vid',
+        }
+      );
+      const inTurnVideos = (batchVideosRes && batchVideosRes.docs) || [];
       const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=${inTurnVideos
         .map((item) => item.vid)
         .join(',')}`;
