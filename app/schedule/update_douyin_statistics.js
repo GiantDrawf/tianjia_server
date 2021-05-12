@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-25 14:36:56
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 20:50:59
+ * @LastEditTime: 2021-05-12 23:28:10
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -16,6 +16,7 @@ class UpdateUsersStatistics extends Subscription {
       cron: '0 10 * * * *', // 每个小时的30分执行
       type: 'all',
       env: ['prod'],
+      immediate: true,
     };
   }
 

@@ -312,10 +312,10 @@ module.exports = (app) => {
   /**
    * 更新视频评论数据
    */
-  router.get(
-    '/douyin/inBatchGetComments',
-    jwt,
-    douyinManager,
-    controller.douyin.inBatchGetComments
-  );
+  // router.get(
+  //   '/douyin/inBatchGetComments',
+  //   jwt,
+  //   douyinManager,
+  //   controller.douyin.inBatchGetComments
+  // );
 };
