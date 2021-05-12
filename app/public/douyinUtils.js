@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:58:35
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-08 18:01:18
+ * @LastEditTime: 2021-05-12 15:16:00
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -50,6 +50,40 @@ const constructRecommendedListParams = (ts) => ({
   channel: 'wandoujia',
   _rticket: ts,
   ts: ts.slice(0, 10),
+});
+
+const getCommentsParams = (ts, aweme_id, cursor) => ({
+  aweme_id,
+  cursor,
+  count: '20',
+  address_book_access: '1',
+  gps_access: '1',
+  forward_page_type: '1',
+  ts: ts.slice(0, 10),
+  js_sdk_version: '1.16.3.5',
+  app_type: 'normal',
+  os_api: '23',
+  device_type: 'MI%205s',
+  device_platform: 'android',
+  ssmix: 'a',
+  iid: '2357800037805959',
+  manifest_version_code: '630',
+  dpi: '416',
+  uuid: '008796760416107',
+  version_code: '630',
+  app_name: 'aweme',
+  version_name: '6.3.0',
+  openudid: '7222532ecfab42ad',
+  device_id: '1460598161286055',
+  resolution: '1170*1872',
+  os_version: '6.0.1',
+  language: 'zh',
+  device_brand: 'Xiaomi',
+  ac: 'wifi',
+  update_version_code: '6302',
+  aid: '1128',
+  channel: 'wandoujia_aweme1',
+  _rticket: ts,
 });
 
 // 我自己抖音账号cookie
@@ -122,10 +156,29 @@ const billboardTypesMap = {
   111: '汽车',
 };
 
+/**
+ * 提取评论文案
+ * @param {Object} itemComment itemComment
+ * @param {Array} pureComments pureComments
+ */
+const extractComments = (itemComment, pureComments = []) => {
+  itemComment.text && pureComments.push(itemComment.text.replace(/@.*\s+/, ''));
+
+  if (itemComment.reply_comment && itemComment.reply_comment.length) {
+    return itemComment.reply_comment.map((itemReply) =>
+      extractComments(itemReply, pureComments)
+    );
+  }
+
+  return pureComments;
+};
+
 module.exports = {
   constructRecommendedListParams,
+  getCommentsParams,
   constructHearders,
   getUrlParams,
   formatDuration,
   billboardTypesMap,
+  extractComments,
 };

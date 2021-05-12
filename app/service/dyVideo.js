@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:18:31
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-27 20:51:55
+ * @LastEditTime: 2021-05-12 16:44:49
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -114,6 +114,19 @@ class DyVideoService extends BaseService {
     }
 
     await inTurnBatchVideos();
+  }
+
+  async updateDyVideo({ vid, ...rest }) {
+    const condition = { vid };
+    const $set = rest;
+    const options = { upsert: false };
+    const updateRes = await this.ctx.model.DyVideo.updateOne(
+      condition,
+      { $set },
+      options
+    );
+
+    return updateRes;
   }
 }
 

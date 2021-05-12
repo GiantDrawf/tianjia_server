@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-09 22:50:37
+ * @LastEditTime: 2021-05-12 17:48:28
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -17,10 +17,12 @@ const fs = require('fs');
 const path = require('path');
 const {
   constructRecommendedListParams,
+  getCommentsParams,
   constructHearders,
   getUrlParams,
   formatDuration,
   billboardTypesMap,
+  extractComments,
 } = require('../public/douyinUtils');
 
 class DyUserController extends BaseController {
@@ -78,8 +80,7 @@ class DyUserController extends BaseController {
   // 获取热门视频列表并落库
   async getHotList() {
     const hotListRes = await rp({
-      uri:
-        'https://creator.douyin.com/aweme/v1/creator/data/billboard/?billboard_type=1',
+      uri: 'https://creator.douyin.com/aweme/v1/creator/data/billboard/?billboard_type=1',
       json: true,
     });
     let hotList = [];
@@ -128,9 +129,8 @@ class DyUserController extends BaseController {
               originItem.city = itemDetail.city || '';
               originItem.statistics = [
                 {
-                  [`${moment().format(
-                    'YYYY-MM-DD_HH'
-                  )}`]: itemDetail.statistics,
+                  [`${moment().format('YYYY-MM-DD_HH')}`]:
+                    itemDetail.statistics,
                 },
               ];
             }
@@ -382,7 +382,8 @@ class DyUserController extends BaseController {
   }
 
   async downloadVideosOffline() {
-    const allVideosLength = await this.ctx.model.DyVideo.estimatedDocumentCount();
+    const allVideosLength =
+      await this.ctx.model.DyVideo.estimatedDocumentCount();
 
     this.success({
       msg: `离线下载已开始，共 ${allVideosLength} 条视频，请耐心等待`,
@@ -613,6 +614,119 @@ class DyUserController extends BaseController {
     }
 
     inBatchDownload(1);
+  }
+
+  async inBatchGetComments() {
+    // 设置锁
+    if (this.ctx.session.lockInBatchGetVC) {
+      this.error({ msg: '离线任务进行中，请不要重复请求' });
+      return;
+    }
+    this.ctx.session.lockInBatchGetVC = true;
+    let allVideosLength = await this.ctx.model.DyVideo.estimatedDocumentCount();
+
+    this.success({
+      msg: `视频评论批量离线更新已开始，共 ${allVideosLength} 条视频，请耐心等待`,
+    });
+    const _this = this;
+
+    async function getCommentsInPages(vid, cursor, pureComments = []) {
+      const ts = new Date().getTime().toString();
+      const params = getCommentsParams(ts, vid, cursor.toString());
+      const apiUrl = `https://aweme.snssdk.com/aweme/v2/comment/list/?${Object.keys(
+        params
+      )
+        .map((itemKey) => `${itemKey}=${params[itemKey]}`)
+        .join('&')}`;
+      const headers = constructHearders(apiUrl, 'aweme.snssdk.com', ts);
+      const res = await rp({
+        uri: apiUrl,
+        headers,
+        json: true,
+        encoding: null,
+      });
+      const commentsInfo = await new Promise((resolve, reject) => {
+        try {
+          zlib.unzip(res, function (err, result) {
+            if (err) {
+              reject(err);
+            } else {
+              let resJson = {};
+              try {
+                resJson = JSON.parse(result);
+              } catch (e) {
+                reject(e);
+              }
+              const commentsOrigin = resJson.comments || [];
+              const pureCommentsFlat = commentsOrigin.map((itemComment) =>
+                extractComments(itemComment)
+              );
+              pureComments = pureComments.concat([
+                ...new Set(pureCommentsFlat.flat(Infinity)),
+              ]);
+              resolve({
+                hasMore: resJson.has_more || 0,
+                total: resJson.total || 0,
+              });
+            }
+          });
+        } catch (e) {
+          resolve(null);
+        }
+      });
+
+      if (commentsInfo && commentsInfo.hasMore && cursor < 2000) {
+        _this.ctx.logger.warn(
+          `cursor: ${cursor + 20}, hasMore: ${commentsInfo.hasMore}, total: ${
+            commentsInfo.total
+          }, pureComments: ${pureComments.length}`
+        );
+        return getCommentsInPages(vid, cursor + 20, pureComments);
+      }
+
+      return pureComments;
+    }
+
+    async function inBatchGetVC(vIndex) {
+      const batchVideoItemRes = await _this.ctx.model.DyVideo.paginate(
+        {},
+        {
+          page: vIndex,
+          limit: 1,
+          select: '-_id vid',
+        }
+      );
+      const batchVideoItem =
+        (batchVideoItemRes &&
+          batchVideoItemRes.docs &&
+          batchVideoItemRes.docs.length &&
+          batchVideoItemRes.docs[0]) ||
+        null;
+      if (batchVideoItem && batchVideoItem.vid) {
+        const { vid } = batchVideoItem;
+        _this.ctx.logger.warn(`开始请求视频 ${vid} 的评论.`);
+        const pureComments = await getCommentsInPages(vid, 0, []);
+
+        await _this.ctx.service.dyVideo.updateDyVideo({
+          vid,
+          comments: pureComments,
+        });
+        _this.ctx.logger.warn(`视频 ${vid} 的评论更新完成.`);
+      }
+      if (allVideosLength > 1) {
+        allVideosLength -= 1;
+        inBatchGetVC(vIndex + 1);
+      } else {
+        // 解锁
+        _this.ctx.session.lockInBatchGetVC = false;
+        _this.ctx.logger.warn('全部视频的评论数据下载完成');
+      }
+    }
+    try {
+      inBatchGetVC(1);
+    } catch (e) {
+      this.ctx.session.lockInBatchGetVC = false;
+    }
   }
 }
 

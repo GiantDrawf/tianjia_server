@@ -308,4 +308,14 @@ module.exports = (app) => {
     douyinManager,
     controller.douyin.downloadUsersOffline
   );
+
+  /**
+   * 更新视频评论数据
+   */
+  router.get(
+    '/douyin/inBatchGetComments',
+    jwt,
+    douyinManager,
+    controller.douyin.inBatchGetComments
+  );
 };
