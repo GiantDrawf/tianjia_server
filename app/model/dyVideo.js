@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:14:23
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-12 16:14:03
+ * @LastEditTime: 2021-05-13 10:08:19
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -31,6 +31,9 @@ module.exports = function (app) {
       duration: {
         type: Number,
       }, // 时长
+      ratio: {
+        type: String,
+      }, // 分辨率
       create_time: {
         type: Number,
       }, // 创建时间

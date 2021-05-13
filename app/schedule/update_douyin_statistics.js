@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-25 14:36:56
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-13 00:22:51
+ * @LastEditTime: 2021-05-13 09:14:05
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -13,7 +13,7 @@ class UpdateUsersStatistics extends Subscription {
   // 通过 schedule 属性来设置定时任务的执行间隔等配置
   static get schedule() {
     return {
-      cron: '0 10 * * * *', // 每个小时的30分执行
+      cron: '0 10 * * * *', // 每个小时的10分执行
       type: 'all',
       env: ['prod'],
     };

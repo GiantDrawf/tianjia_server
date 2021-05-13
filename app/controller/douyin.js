@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 14:38:30
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-12 18:52:18
+ * @LastEditTime: 2021-05-13 10:07:53
  * @Description: 抖音爬虫用户模块
  */
 'use strict';
@@ -196,12 +196,7 @@ class DyUserController extends BaseController {
       );
 
     const now = moment().format('YYYY-MM-DD_HH');
-    const allVideos = await this.ctx.service.dyVideo.getAllVideos();
-    const existsVids = allVideos.map((item) => item.vid);
     const grabVideos = [];
-
-    const allUsers = await this.ctx.service.dyUser.getAllUsers();
-    const existsUids = allUsers.map((item) => item.sec_uid);
     const grabUsers = [];
 
     allResult.forEach((itemRes, index) => {
@@ -217,31 +212,23 @@ class DyUserController extends BaseController {
           const sec_uid =
             (link.split('?')[1] && getUrlParams(link.split('?')[1]).sec_uid) ||
             '';
-          // 防重复
-          if (!existsUids.includes(sec_uid)) {
-            existsUids.push(sec_uid);
-            grabUsers.push({
-              sec_uid,
-              link,
-              author_name,
-              author_thumb,
-              category: billboard_types[index],
-            });
-          }
+          grabUsers.push({
+            sec_uid,
+            link,
+            author_name,
+            author_thumb,
+            category: billboard_types[index],
+          });
 
           if (extra_list && extra_list.length) {
             extra_list.forEach((itemVideo) => {
               const vid = itemVideo.link.split('/')[5] || '';
-              // 防重复
-              if (!existsVids.includes(vid)) {
-                existsVids.push(vid);
-                grabVideos.push({
-                  ...itemVideo,
-                  vid,
-                  category: billboard_types[index],
-                  sec_uid,
-                });
-              }
+              grabVideos.push({
+                ...itemVideo,
+                vid,
+                category: billboard_types[index],
+                sec_uid,
+              });
             });
           }
         });
@@ -249,7 +236,7 @@ class DyUserController extends BaseController {
     });
 
     this.success({
-      data: `视频 ${grabVideos.length} 个, 账号 ${grabUsers.length} 个`,
+      msg: '离线抓取任务已开始，请耐心等待...',
     });
 
     this.handleVideoData(grabVideos, now);
@@ -263,8 +250,19 @@ class DyUserController extends BaseController {
     // 开始分批请求数据，先请求
     async function inTurnToBatchVideos(_grabVideos) {
       const inTurnVideos = _grabVideos.splice(0, 20);
+      const inTurnVids = inTurnVideos.map((item) => item.vid);
+      // 查询已经存在的视频
+      const existedVideos = await _this.ctx.model.DyVideo.find({
+        vid: { $in: inTurnVids },
+      }).select('-_id vid');
+      const existedVids =
+        (existedVideos &&
+          existedVideos.length &&
+          existedVideos.map((item) => item.vid)) ||
+        [];
       const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=${inTurnVideos
         .map((item) => item.vid)
+        .filter((itemVid) => !existedVids.includes(itemVid))
         .join(',')}`;
       const videosDetail = await rp({
         uri: inTurnsApi,
@@ -292,6 +290,7 @@ class DyUserController extends BaseController {
                     .map((itemTag) => itemTag.hashtag_name)
                     .filter((item) => item !== ''),
                 duration: itemDetail.duration,
+                ratio: (itemDetail.video && itemDetail.video.ratio) || '',
                 create_time: itemDetail.create_time,
                 city: itemDetail.city || '',
                 statistics: [
@@ -308,16 +307,14 @@ class DyUserController extends BaseController {
       }
       // 落库
       if (packageItemVideos.length) {
-        _this.ctx.logger.warn(
-          `落库视频 ${packageItemVideos.length} 条，还剩 ${_grabVideos.length} 条`
-        );
+        _this.ctx.logger.warn(`落库视频 ${packageItemVideos.length} 条`);
         await _this.ctx.service.dyVideo.batchCreate(packageItemVideos);
       }
 
       if (_grabVideos.length) {
         inTurnToBatchVideos(_grabVideos);
       } else {
-        _this.ctx.logger.warn('视频落库完成');
+        _this.ctx.logger.warn('所有新视频落库完成');
       }
     }
 
@@ -328,53 +325,57 @@ class DyUserController extends BaseController {
     const _this = this;
     async function inTurnToBatchUser(_grabUsers) {
       const inTurnUser = _grabUsers.shift();
-      const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/user/info/?sec_uid=${inTurnUser.sec_uid}`;
-      const userDetailRes = await rp({
-        uri: inTurnsApi,
-        json: true,
+      // 查看账号是否已存在
+      const userIsExisted = await _this.ctx.model.DyUser.findOne({
+        sec_uid: inTurnUser.sec_uid,
       });
+      if (!userIsExisted) {
+        const inTurnsApi = `https://www.iesdouyin.com/web/api/v2/user/info/?sec_uid=${inTurnUser.sec_uid}`;
+        const userDetailRes = await rp({
+          uri: inTurnsApi,
+          json: true,
+        });
 
-      if (
-        userDetailRes &&
-        userDetailRes.user_info &&
-        userDetailRes.user_info.uid
-      ) {
-        const userInfo = userDetailRes.user_info;
-        const userDetail = {
-          ...inTurnUser,
-          uid: userInfo.uid,
-          signature: userInfo.signature,
-          region: userInfo.region,
-          statistics: [
-            {
-              [`${now}`]: {
-                favoriting_count: userInfo.favoriting_count,
-                original_music_count:
-                  (userInfo.original_musician &&
-                    userInfo.original_musician.music_count) ||
-                  0,
-                original_music_used_count:
-                  (userInfo.original_musician &&
-                    userInfo.original_musician.music_used_count) ||
-                  0,
-                aweme_count: userInfo.aweme_count,
-                following_count: userInfo.following_count,
-                total_favorited: userInfo.total_favorited,
-                follower_count: userInfo.follower_count,
+        if (
+          userDetailRes &&
+          userDetailRes.user_info &&
+          userDetailRes.user_info.uid
+        ) {
+          const userInfo = userDetailRes.user_info;
+          const userDetail = {
+            ...inTurnUser,
+            uid: userInfo.uid,
+            signature: userInfo.signature,
+            region: userInfo.region,
+            statistics: [
+              {
+                [`${now}`]: {
+                  favoriting_count: userInfo.favoriting_count,
+                  original_music_count:
+                    (userInfo.original_musician &&
+                      userInfo.original_musician.music_count) ||
+                    0,
+                  original_music_used_count:
+                    (userInfo.original_musician &&
+                      userInfo.original_musician.music_used_count) ||
+                    0,
+                  aweme_count: userInfo.aweme_count,
+                  following_count: userInfo.following_count,
+                  total_favorited: userInfo.total_favorited,
+                  follower_count: userInfo.follower_count,
+                },
               },
-            },
-          ],
-        };
-        _this.ctx.logger.warn(
-          `账号 ${inTurnUser.sec_uid} 落库, 还剩 ${_grabUsers.length} 个`
-        );
-        await _this.ctx.service.dyUser.create(userDetail);
+            ],
+          };
+          _this.ctx.logger.warn(`账号 ${userInfo.uid} 落库`);
+          await _this.ctx.service.dyUser.create(userDetail);
+        }
       }
 
       if (_grabUsers.length) {
         inTurnToBatchUser(_grabUsers);
       } else {
-        _this.ctx.logger.warn('账号落库完成');
+        _this.ctx.logger.warn('所有新账号落库完成');
       }
     }
 
