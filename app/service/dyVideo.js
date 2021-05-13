@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:18:31
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-13 00:19:46
+ * @LastEditTime: 2021-05-13 10:18:36
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -82,7 +82,7 @@ class DyVideoService extends BaseService {
         {},
         {
           page,
-          limit: 1,
+          limit: pageSize,
           select: '-_id vid',
         }
       );
