@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:14:23
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-13 10:08:19
+ * @LastEditTime: 2021-05-14 09:54:53
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -42,6 +42,7 @@ module.exports = function (app) {
       },
       statistics: { type: Array },
       comments: { type: Array },
+      isTrack: { type: Boolean }, // 是否跟踪
     },
     { versionKey: false }
   );
