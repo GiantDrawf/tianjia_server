@@ -322,8 +322,8 @@ module.exports = (app) => {
   /**
    * 获取抖音首页推荐列表视频
    */
-  router.get(
-    '/douyin/getRecommendedAweme',
-    controller.douyin.getRecommendedAweme
-  );
+  // router.get(
+  //   '/douyin/getRecommendedAweme',
+  //   controller.douyin.getRecommendedAweme
+  // );
 };
