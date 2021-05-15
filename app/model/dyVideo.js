@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:14:23
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-14 09:54:53
+ * @LastEditTime: 2021-05-15 12:45:44
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -28,6 +28,7 @@ module.exports = function (app) {
       uid: { type: String }, // 视频作者uid
       music_author: { type: String }, // 背景音乐作者
       tag: { type: Array }, // 标签
+      playUrl: { type: String }, // 视频地址
       duration: {
         type: Number,
       }, // 时长

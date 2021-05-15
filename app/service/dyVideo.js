@@ -3,7 +3,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2021-04-23 23:18:31
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-14 17:10:56
+ * @LastEditTime: 2021-05-15 12:54:33
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -216,6 +216,13 @@ class DyVideoService extends BaseService {
                   uid: (itemDetail.author && itemDetail.author.uid) || '',
                   music_author:
                     (itemDetail.music && itemDetail.music.author) || '',
+                  playUrl:
+                    (itemDetail.video &&
+                      itemDetail.video.play_addr &&
+                      itemDetail.video.play_addr.url_list &&
+                      itemDetail.video.play_addr.url_list.length &&
+                      itemDetail.video.play_addr.url_list[0]) ||
+                    '',
                   duration: itemDetail.duration || 0,
                   ratio: (itemDetail.video && itemDetail.video.ratio) || '',
                   create_time: itemDetail.create_time,
