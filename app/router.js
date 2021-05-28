@@ -166,6 +166,16 @@ module.exports = (app) => {
   );
 
   /**
+   * 浏览文章，记录浏览数
+   */
+  router.get('/h5/article/browseArticle', controller.article.browseArticle);
+
+  /**
+   * 获取热门文章
+   */
+  router.get('/h5/article/getHotArticles', controller.article.getHotArticles);
+
+  /**
    * 新建模块
    */
   router.post('/platform/module/create', jwt, admin, controller.module.create);

@@ -104,6 +104,28 @@ class ArticleController extends BaseController {
 
     this.success({ data: articles });
   }
+
+  async browseArticle() {
+    const { aid } = this.ctx.request.query;
+
+    await this.ctx.service.article.addArticleViews(aid);
+
+    this.success();
+  }
+
+  async getHotArticles() {
+    const { limit = 10 } = this.ctx.request.query;
+
+    const articles = await this.ctx.service.article.getHotArticles(
+      Number(limit)
+    );
+
+    if (articles && articles.list) {
+      this.success({ data: articles.list });
+    } else {
+      this.error();
+    }
+  }
 }
 
 module.exports = ArticleController;
