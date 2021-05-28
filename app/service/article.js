@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-10 17:39:29
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-21 13:39:38
+ * @LastEditTime: 2021-05-28 11:35:43
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -47,7 +47,6 @@ class ArticleService extends BaseService {
     const article = await this.ctx.model.Article.findOne({ aid }).select({
       _id: false,
       creator: false,
-      createTime: false,
       updater: false,
       updateTime: false,
     });
@@ -96,6 +95,32 @@ class ArticleService extends BaseService {
       createTime: false,
       updater: false,
       updateTime: false,
+    });
+
+    return res;
+  }
+
+  async addArticleViews(aid) {
+    const condition = { aid };
+    const $inc = { views: 1 };
+    const options = { upsert: false };
+    const updateRes = await this.ctx.model.Article.updateOne(
+      condition,
+      { $inc },
+      options
+    );
+
+    return updateRes;
+  }
+
+  async getHotArticles(limit) {
+    const res = await this.commonQuery({
+      params: { pagination: { pageSize: limit } },
+      options: {
+        model: this.ctx.model.Article,
+        select: '-_id aid title thumbnail views createTime',
+        sort: { views: -1 },
+      },
     });
 
     return res;
