@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-18 17:39:52
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-20 17:58:53
+ * @LastEditTime: 2021-06-28 10:36:28
  * @Description: 模块Controller
  */
 'use strict';
@@ -125,6 +125,12 @@ class ModuleController extends BaseController {
     );
 
     this.success({ data: moduleDetail });
+  }
+
+  async getAllModules() {
+    const allModules = await this.ctx.service.module.getAllModules();
+
+    this.success({ data: allModules });
   }
 }
 

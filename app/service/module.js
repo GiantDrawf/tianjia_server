@@ -1,7 +1,7 @@
 /*
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-18 16:46:08
- * @LastEditTime: 2021-04-21 13:52:07
+ * @LastEditTime: 2021-06-28 16:55:01
  * @LastEditors: zhujian
  * @Description: 模块serives
  * @FilePath: /tianjia_server/app/service/module.js
@@ -24,6 +24,12 @@ class ModuleService extends BaseService {
     const deleteUser = await this.ctx.model.Module.remove(condition);
 
     return deleteUser;
+  }
+
+  async batchUpdateModules(newModules) {
+    const updateRes = await this.ctx.model.Module.bulkWrite(newModules);
+
+    return updateRes;
   }
 
   async updateModule({ mid, ...rest }) {
@@ -70,47 +76,7 @@ class ModuleService extends BaseService {
     return res;
   }
 
-  async queryDetail({ mid, showLimit = 0, needAContent = 0 }) {
-    // const moduleDetail = await this.ctx.model.Module.aggregate([
-    //   { $match: { mid } },
-    //   {
-    //     $lookup: {
-    //       from: 'article',
-    //       localField: 'moduleContent.aid',
-    //       foreignField: 'aid',
-    //       as: 'result',
-    //     },
-    //   },
-    //   // 组装数据
-    //   {
-    //     $group: {
-    //       _id: '$mid',
-    //       mid: { $first: '$mid' },
-    //       moduleName: { $first: '$moduleName' },
-    //       moduleDesc: { $first: '$moduleDesc' },
-    //       moduleContent: { $first: '$result' },
-    //     },
-    //   },
-    //   // 限制返回字段
-    //   {
-    //     $project: {
-    //       _id: 0,
-    //       mid: 1,
-    //       moduleName: 1,
-    //       moduleDesc: 1,
-    //       'moduleContent.aid': 1,
-    //       'moduleContent.title': 1,
-    //       'moduleContent.summary': 1,
-    //       'moduleContent.type': 1,
-    //       'moduleContent.thumbnail': 1,
-    //       'moduleContent.createTime': 1,
-    //       'moduleContent.creator': 1,
-    //     },
-    //   },
-    // ]);
-
-    // return (moduleDetail && moduleDetail[0]) || {};
-    const _needAContent = Number(needAContent) === 1;
+  async queryDetail({ mid, showLimit = 0, needAContent = 0, offset = 0 }) {
     const moduleDetail = await this.ctx.model.Module.findOne({ mid }).select({
       _id: false,
       mid: true,
@@ -118,8 +84,16 @@ class ModuleService extends BaseService {
       moduleDesc: true,
       moduleContent: true,
     });
+    const _showLimit = Number(showLimit);
+    const _offset = Number(offset);
+    const _needAContent = Number(needAContent) === 1;
     let moduleContent = [...moduleDetail.moduleContent];
+    // 限制输出条数
+    if (_showLimit) {
+      moduleContent = moduleContent.slice(_offset, _offset + _showLimit);
+    }
     const aids = moduleContent.map((item) => item.aid);
+    // 查询文章详情
     const articles = await this.ctx.model.Article.find({
       aid: { $in: aids },
     }).select({
@@ -158,18 +132,33 @@ class ModuleService extends BaseService {
         .filter((item) => !item.exist)
     );
 
-    const _showLimit = Number(showLimit);
-
-    // 限制输出条数
-    if (_showLimit) {
-      moduleContent = moduleContent.slice(0, _showLimit);
-    }
-
     return Object.assign(moduleDetail.toObject(), { moduleContent });
   }
 
   async queryModuleByModuleName(moduleName) {
     return await await this.ctx.model.Module.findOne({ moduleName });
+  }
+
+  /**
+   * 获取所有模块列表
+   */
+  async getAllModules() {
+    let modules = await this.ctx.model.Module.find({}).select({
+      _id: false,
+      mid: true,
+      moduleName: true,
+      moduleDesc: true,
+      moduleContent: true,
+    });
+
+    if (modules && modules.length) {
+      modules = modules.map((item) => ({
+        ...item.toObject(),
+        moduleContent: [...item.moduleContent].map((item) => item.aid),
+      }));
+    }
+
+    return modules;
   }
 }
 

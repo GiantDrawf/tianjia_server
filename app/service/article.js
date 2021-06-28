@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-10 17:39:29
  * @LastEditors: zhujian
- * @LastEditTime: 2021-05-28 11:35:43
+ * @LastEditTime: 2021-06-28 16:31:44
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -43,6 +43,15 @@ class ArticleService extends BaseService {
     return updateRes;
   }
 
+  async queryArticleInModules(aid) {
+    // 查询文章所在模块
+    const inModules = await this.ctx.model.Module.find({
+      moduleContent: { $elemMatch: { aid } },
+    }).select({ _id: false, mid: true });
+
+    return inModules.map((item) => item.mid);
+  }
+
   async queryDetail(aid) {
     const article = await this.ctx.model.Article.findOne({ aid }).select({
       _id: false,
@@ -51,7 +60,12 @@ class ArticleService extends BaseService {
       updateTime: false,
     });
 
-    return article;
+    // 查询文章所在模块
+    const inModules = await this.queryArticleInModules(aid);
+
+    return Object.assign(article.toObject(), {
+      inModules,
+    });
   }
 
   async query(params = {}) {

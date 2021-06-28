@@ -201,6 +201,11 @@ module.exports = (app) => {
   router.get('/common/module/getDetail', controller.module.getDetail);
 
   /**
+   * 获取所有模块
+   */
+  router.get('/platform/module/getAllModules', controller.module.getAllModules);
+
+  /**
    * 新增登记
    */
   router.post('/temporary/checkin/add', controller.checkIn.createCheckIn);
