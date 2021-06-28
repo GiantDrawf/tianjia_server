@@ -22,7 +22,10 @@ class ArticleController extends BaseController {
   async create() {
     const {
       ctx: {
-        request: { body: articleParams },
+        request: {
+          body: articleParams,
+          body: { inModules },
+        },
       },
     } = this;
 
@@ -33,9 +36,11 @@ class ArticleController extends BaseController {
     );
     if (!validateResult) return;
 
+    const aid = uuidv4();
+
     const cleanParams = Object.assign(
       {
-        aid: uuidv4(),
+        aid,
         creator: this.ctx.state.user.name,
         createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
       },
@@ -45,6 +50,16 @@ class ArticleController extends BaseController {
     const newArticle = await this.ctx.service.article.createArticle(
       cleanParams
     );
+    // 需要添加至的模块
+    const modulesNeedToAdd = inModules.map((mid) => ({
+      updateOne: {
+        filter: { mid },
+        update: { $addToSet: { moduleContent: { aid, isTop: false } } },
+      },
+    }));
+    if (modulesNeedToAdd.length) {
+      await this.ctx.service.module.batchUpdateModules(modulesNeedToAdd);
+    }
     this.success({ data: newArticle });
   }
 
@@ -66,10 +81,42 @@ class ArticleController extends BaseController {
   }
 
   async update() {
-    const updateRes = await this.ctx.service.article.updateArticle(
-      this.ctx.request.body
-    );
+    const {
+      body,
+      body: { inModules, aid },
+    } = this.ctx.request;
+    // 更新文章
+    delete body.inModules;
+    const updateRes = await this.ctx.service.article.updateArticle(body);
 
+    // 更新模块
+    // 原先所在模块
+    const originInModules =
+      await this.ctx.service.article.queryArticleInModules(aid);
+    // 需要添加至的模块
+    const modulesNeedToAdd = inModules
+      .filter((item) => !originInModules.includes(item))
+      .map((mid) => ({
+        updateOne: {
+          filter: { mid },
+          update: { $addToSet: { moduleContent: { aid, isTop: false } } },
+        },
+      }));
+    const modulesNeedToRemove = originInModules
+      .filter((item) => !inModules.includes(item))
+      .map((mid) => ({
+        updateOne: {
+          filter: { mid },
+          update: { $pull: { moduleContent: { aid } } },
+        },
+      }));
+    const aidInModulesChangeActions =
+      modulesNeedToAdd.concat(modulesNeedToRemove);
+    if (aidInModulesChangeActions.length) {
+      await this.ctx.service.module.batchUpdateModules(
+        aidInModulesChangeActions
+      );
+    }
     if (updateRes && updateRes.ok) {
       this.success({
         code: 200,
