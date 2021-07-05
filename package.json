@@ -32,7 +32,7 @@
     "egg-bin": "^4.16.2",
     "egg-ci": "^1.18.0",
     "egg-mock": "^4.1.0",
-    "eslint": "^7.29.0",
+    "eslint": "^7.30.0",
     "eslint-config-egg": "^9.0.0"
   },
   "engines": {
