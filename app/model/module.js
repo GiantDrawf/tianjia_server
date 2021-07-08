@@ -2,7 +2,7 @@
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-16 10:22:25
  * @LastEditors: zhujian
- * @LastEditTime: 2021-04-14 23:51:27
+ * @LastEditTime: 2021-07-07 11:47:57
  * @Description: 你 kin 你擦
  */
 'use strict';
@@ -27,6 +27,7 @@ module.exports = function (app) {
         {
           aid: { type: String },
           isTop: { type: Boolean, default: false },
+          createTime: { type: String },
         },
       ],
       // 创建人

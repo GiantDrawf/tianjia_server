@@ -242,7 +242,7 @@ module.exports = (app) => {
   /**
    * 获取单个模块详情
    */
-  router.get('/common/module/getDetail', controller.module.getDetail);
+  router.post('/common/module/getDetail', controller.module.getDetail);
 
   /**
    * 获取所有模块

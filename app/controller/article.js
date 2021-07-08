@@ -37,12 +37,13 @@ class ArticleController extends BaseController {
     if (!validateResult) return;
 
     const aid = uuidv4();
+    const createTime = moment().format('YYYY-MM-DD HH:mm:ss');
 
     const cleanParams = Object.assign(
       {
         aid,
         creator: this.ctx.state.user.name,
-        createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+        createTime,
       },
       articleParams
     );
@@ -54,7 +55,9 @@ class ArticleController extends BaseController {
     const modulesNeedToAdd = inModules.map((mid) => ({
       updateOne: {
         filter: { mid },
-        update: { $addToSet: { moduleContent: { aid, isTop: false } } },
+        update: {
+          $addToSet: { moduleContent: { aid, isTop: false, createTime } },
+        },
       },
     }));
     if (modulesNeedToAdd.length) {
@@ -66,6 +69,23 @@ class ArticleController extends BaseController {
   async delete() {
     const { aid } = this.ctx.request.query;
     const deleteRes = await this.ctx.service.article.deleteArticle(aid);
+
+    // 更新模块
+    // 原先所在模块
+    const originInModules =
+      await this.ctx.service.article.queryArticleInModules(aid);
+
+    // 在模块中移除
+    if (originInModules.length) {
+      await this.ctx.service.module.batchUpdateModules(
+        originInModules.map((mid) => ({
+          updateOne: {
+            filter: { mid },
+            update: { $pull: { moduleContent: { aid } } },
+          },
+        }))
+      );
+    }
 
     if (deleteRes && deleteRes.ok && deleteRes.n) {
       this.success({
@@ -83,7 +103,7 @@ class ArticleController extends BaseController {
   async update() {
     const {
       body,
-      body: { inModules, aid },
+      body: { inModules, aid, createTime },
     } = this.ctx.request;
     // 更新文章
     delete body.inModules;
@@ -99,7 +119,9 @@ class ArticleController extends BaseController {
       .map((mid) => ({
         updateOne: {
           filter: { mid },
-          update: { $addToSet: { moduleContent: { aid, isTop: false } } },
+          update: {
+            $addToSet: { moduleContent: { aid, isTop: false, createTime } },
+          },
         },
       }));
     const modulesNeedToRemove = originInModules

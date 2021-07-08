@@ -1,7 +1,7 @@
 /*
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-18 16:46:08
- * @LastEditTime: 2021-06-28 16:55:01
+ * @LastEditTime: 2021-07-08 16:01:05
  * @LastEditors: zhujian
  * @Description: 模块serives
  * @FilePath: /tianjia_server/app/service/module.js
@@ -11,6 +11,7 @@
 /* eslint-disable indent */
 const BaseService = require('./BaseService');
 const moment = require('moment');
+const { sortTopAndCreateTime } = require('../public/utils');
 
 class ModuleService extends BaseService {
   async createModule(module) {
@@ -76,7 +77,13 @@ class ModuleService extends BaseService {
     return res;
   }
 
-  async queryDetail({ mid, showLimit = 0, needAContent = 0, offset = 0 }) {
+  async queryDetail({
+    mid,
+    needAContent = false,
+    page = 1,
+    pageSize = Number.MAX_SAFE_INTEGER,
+    fuzzy, // 模糊查询参数
+  }) {
     const moduleDetail = await this.ctx.model.Module.findOne({ mid }).select({
       _id: false,
       mid: true,
@@ -84,19 +91,27 @@ class ModuleService extends BaseService {
       moduleDesc: true,
       moduleContent: true,
     });
-    const _showLimit = Number(showLimit);
-    const _offset = Number(offset);
-    const _needAContent = Number(needAContent) === 1;
     let moduleContent = [...moduleDetail.moduleContent];
-    // 限制输出条数
-    if (_showLimit) {
-      moduleContent = moduleContent.slice(_offset, _offset + _showLimit);
-    }
-    const aids = moduleContent.map((item) => item.aid);
+    const aids = sortTopAndCreateTime(moduleContent)
+      .map((item) => item.aid)
+      .slice((page - 1) * pageSize, page * pageSize);
     // 查询文章详情
-    const articles = await this.ctx.model.Article.find({
-      aid: { $in: aids },
-    }).select({
+    const articles = await this.ctx.model.Article.find(
+      fuzzy
+        ? {
+            $and: [
+              {
+                $or: [
+                  { title: new RegExp(fuzzy) },
+                  { content: new RegExp(fuzzy) },
+                  { summary: new RegExp(fuzzy) },
+                ],
+              },
+              { aid: { $in: aids } },
+            ],
+          }
+        : { aid: { $in: aids } }
+    ).select({
       _id: 0,
       aid: 1,
       title: 1,
@@ -107,32 +122,30 @@ class ModuleService extends BaseService {
       createTime: 1,
       creator: 1,
     });
-    // 置顶排序
-    const sortTop = (arr) =>
-      arr.sort((a, b) =>
-        !a.isTop && b.isTop ? 1 : a.isTop && !b.isTop ? -1 : 0
-      );
-    // 融合文章详情
-    moduleContent = sortTop(
-      moduleDetail.moduleContent
-        .map((moduleArticle) => {
-          const matchArticle = articles.filter(
-            (aDetail) => aDetail.aid === moduleArticle.aid
+    const total = moduleContent.length;
+
+    // 融合文章详情并处理置顶排序
+    moduleContent = sortTopAndCreateTime(
+      articles
+        .map((articleDetail) => {
+          const matchArticle = moduleDetail.moduleContent.filter(
+            (moduleArticle) => moduleArticle.aid === articleDetail.aid
           );
 
           return Object.assign(
-            moduleArticle.toObject(),
+            articleDetail.toObject(),
             // 去掉_id
             { _id: undefined },
+            // 判断文章详情是否存在
             matchArticle.length ? matchArticle[0].toObject() : { exist: false },
             // 是否需要文章内容
-            _needAContent ? {} : { content: undefined }
+            needAContent ? {} : { content: undefined }
           );
         })
-        .filter((item) => !item.exist)
+        .filter((item) => !('exist' in item))
     );
 
-    return Object.assign(moduleDetail.toObject(), { moduleContent });
+    return Object.assign(moduleDetail.toObject(), { moduleContent, total });
   }
 
   async queryModuleByModuleName(moduleName) {

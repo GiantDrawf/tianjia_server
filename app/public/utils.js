@@ -1,6 +1,8 @@
+/* eslint-disable indent */
 'use strict';
 const crypto = require('crypto');
 const path = require('path');
+const moment = require('moment');
 
 /**
  * MD5
@@ -59,4 +61,20 @@ const getRandomWorld = () => {
   return Math.random().toString(36).substr(2);
 };
 
-module.exports = { MD5, getFileExt, getRandomWorld };
+/**
+ * 根据置顶和创建时间排序
+ * @param {Array} array array
+ * @return {Array} arr
+ */
+const sortTopAndCreateTime = (array) =>
+  array.sort((a, b) =>
+    !a.isTop && b.isTop
+      ? 1
+      : a.isTop && !b.isTop
+      ? -1
+      : moment(a.createTime).isAfter(b.createTime)
+      ? -1
+      : 1
+  );
+
+module.exports = { MD5, getFileExt, getRandomWorld, sortTopAndCreateTime };
