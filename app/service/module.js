@@ -1,7 +1,7 @@
 /*
  * @Author: zhujian1995@outlook.com
  * @Date: 2020-11-18 16:46:08
- * @LastEditTime: 2021-07-08 16:01:05
+ * @LastEditTime: 2021-07-08 17:20:47
  * @LastEditors: zhujian
  * @Description: 模块serives
  * @FilePath: /tianjia_server/app/service/module.js
@@ -91,61 +91,83 @@ class ModuleService extends BaseService {
       moduleDesc: true,
       moduleContent: true,
     });
-    let moduleContent = [...moduleDetail.moduleContent];
-    const aids = sortTopAndCreateTime(moduleContent)
-      .map((item) => item.aid)
-      .slice((page - 1) * pageSize, page * pageSize);
-    // 查询文章详情
-    const articles = await this.ctx.model.Article.find(
-      fuzzy
-        ? {
-            $and: [
-              {
-                $or: [
-                  { title: new RegExp(fuzzy) },
-                  { content: new RegExp(fuzzy) },
-                  { summary: new RegExp(fuzzy) },
-                ],
-              },
-              { aid: { $in: aids } },
-            ],
-          }
-        : { aid: { $in: aids } }
-    ).select({
-      _id: 0,
-      aid: 1,
-      title: 1,
-      content: 1,
-      summary: 1,
-      type: 1,
-      thumbnail: 1,
-      createTime: 1,
-      creator: 1,
+    let moduleContent = [
+      ...((moduleDetail && moduleDetail.moduleContent) || []),
+    ];
+    let total = moduleContent.length;
+    if (moduleContent.length) {
+      const aids = sortTopAndCreateTime(moduleContent)
+        .map((item) => item.aid)
+        .slice(
+          fuzzy ? 0 : (page - 1) * pageSize,
+          fuzzy ? Number.MAX_SAFE_INTEGER : page * pageSize
+        );
+      // 查询文章详情
+      const articles = await this.ctx.model.Article.find(
+        fuzzy
+          ? {
+              $and: [
+                {
+                  $or: [
+                    { title: new RegExp(fuzzy) },
+                    { content: new RegExp(fuzzy) },
+                    { summary: new RegExp(fuzzy) },
+                  ],
+                },
+                { aid: { $in: aids } },
+              ],
+            }
+          : { aid: { $in: aids } }
+      ).select({
+        _id: 0,
+        aid: 1,
+        title: 1,
+        content: 1,
+        summary: 1,
+        type: 1,
+        thumbnail: 1,
+        createTime: 1,
+        creator: 1,
+      });
+
+      total = articles.length;
+
+      // 融合文章详情并处理置顶排序
+      moduleContent = sortTopAndCreateTime(
+        articles
+          .map((articleDetail) => {
+            const matchArticle = moduleDetail.moduleContent.filter(
+              (moduleArticle) => moduleArticle.aid === articleDetail.aid
+            );
+
+            return Object.assign(
+              articleDetail.toObject(),
+              // 去掉_id
+              { _id: undefined },
+              // 判断文章详情是否存在
+              matchArticle.length
+                ? matchArticle[0].toObject()
+                : { exist: false },
+              // 是否需要文章内容
+              needAContent ? {} : { content: undefined }
+            );
+          })
+          .filter((item) => !('exist' in item))
+      );
+
+      // 如果是模糊匹配在这里进行分页裁剪
+      if (fuzzy) {
+        moduleContent = moduleContent.slice(
+          (page - 1) * pageSize,
+          page * pageSize
+        );
+      }
+    }
+
+    return Object.assign(moduleDetail ? moduleDetail.toObject() : {}, {
+      moduleContent,
+      total,
     });
-    const total = moduleContent.length;
-
-    // 融合文章详情并处理置顶排序
-    moduleContent = sortTopAndCreateTime(
-      articles
-        .map((articleDetail) => {
-          const matchArticle = moduleDetail.moduleContent.filter(
-            (moduleArticle) => moduleArticle.aid === articleDetail.aid
-          );
-
-          return Object.assign(
-            articleDetail.toObject(),
-            // 去掉_id
-            { _id: undefined },
-            // 判断文章详情是否存在
-            matchArticle.length ? matchArticle[0].toObject() : { exist: false },
-            // 是否需要文章内容
-            needAContent ? {} : { content: undefined }
-          );
-        })
-        .filter((item) => !('exist' in item))
-    );
-
-    return Object.assign(moduleDetail.toObject(), { moduleContent, total });
   }
 
   async queryModuleByModuleName(moduleName) {
